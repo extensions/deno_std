@@ -54,7 +54,7 @@ export type TypeRelation<Actual, Expected> =
     : // neither are `any`
   Actual | Nonce extends Nonce
   ? Expected | Nonce extends Nonce
-    ? Pass // both are `never`
+    ? Identical // both are `never`
     : ActualIsSubsetOfExpected // Actual is `never`
   : Expected | Nonce extends Nonce
     ? ActualIsSupersetOfExpected // Expected is `never`
