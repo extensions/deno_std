@@ -153,5 +153,219 @@ Deno.test(
 
 Deno.test(
   "failed unions",
-  typeErrorsTest(``, ``),
+  typeErrorsTest(
+    `
+    type zeroValues = never;
+    type oneValue = zeroValues | "one";
+    type twoValues = oneValue | "two";
+    type threeValues = twoValues | "three";
+    type infinityValues = threeValues | string;
+    type infinitySquaredValues = infinityValues | bigint;
+
+    assertStatic<TypeEquals<zeroValues, oneValue>>();
+    assertStatic<TypeEquals<oneValue, twoValues>>();
+    assertStatic<TypeEquals<twoValues, threeValues>>();
+    assertStatic<TypeEquals<threeValues, infinityValues>>();
+    assertStatic<TypeEquals<infinityValues, infinitySquaredValues>>();
+    assertStatic<TypeEquals<infinitySquaredValues, zeroValues>>();
+
+    assertStatic<TypeStrictlyExtends<zeroValues, zeroValues>>();
+    assertStatic<TypeExtends<oneValue, zeroValues>>();
+    assertStatic<TypeStrictlyExtends<oneValue, zeroValues>>();
+    assertStatic<TypeExtends<twoValues, zeroValues>>();
+    assertStatic<TypeStrictlyExtends<twoValues, zeroValues>>();
+    assertStatic<TypeExtends<threeValues, zeroValues>>();
+    assertStatic<TypeStrictlyExtends<threeValues, zeroValues>>();
+    assertStatic<TypeExtends<infinityValues, zeroValues>>();
+    assertStatic<TypeStrictlyExtends<infinityValues, zeroValues>>();
+    assertStatic<TypeExtends<infinitySquaredValues, zeroValues>>();
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, zeroValues>>();
+
+    assertStatic<TypeExtends<twoValues, oneValue>>();
+    assertStatic<TypeStrictlyExtends<twoValues, oneValue>>();
+    assertStatic<TypeStrictlyExtends<threeValues, twoValues>>();
+    assertStatic<TypeStrictlyExtends<threeValues, oneValue>>();
+    assertStatic<TypeExtends<infinityValues, oneValue>>();
+    assertStatic<TypeStrictlyExtends<infinityValues, oneValue>>();
+    assertStatic<TypeExtends<infinitySquaredValues, oneValue>>();
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, oneValue>>();
+
+    assertStatic<TypeExtends<infinitySquaredValues, zeroValues>>();
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, zeroValues>>();
+    assertStatic<TypeExtends<infinitySquaredValues, oneValue>>();
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, oneValue>>();
+    assertStatic<TypeExtends<infinitySquaredValues, twoValues>>();
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, twoValues>>();
+    assertStatic<TypeExtends<infinitySquaredValues, infinityValues>>();
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, infinityValues>>();
+    `,
+    `
+    error: TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", "one", " but actual type was ", never, ". ", "Actual type is extended by/is a strict subset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeEquals<zeroValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:10:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", twoValues, " but actual type was ", "one", ". ", "Actual type is extended by/is a strict subset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeEquals<oneValue, twoValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:11:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", threeValues, " but actual type was ", twoValues, ". ", "Actual type is extended by/is a strict subset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeEquals<twoValues, threeValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:12:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", string, " but actual type was ", threeValues, ". ", "Actual type is extended by/is a strict subset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeEquals<threeValues, infinityValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:13:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", infinitySquaredValues, " but actual type was ", string, ". ", "Actual type is extended by/is a strict subset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeEquals<infinityValues, infinitySquaredValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:14:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", never, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeEquals<infinitySquaredValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:15:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", never, " but actual type was ", never, ". ", "Actual and expected types are identical."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<zeroValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:17:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", never, " but actual type was ", "one", ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<oneValue, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:18:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", never, " but actual type was ", "one", ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<oneValue, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:19:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", never, " but actual type was ", twoValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<twoValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:20:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", never, " but actual type was ", twoValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<twoValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:21:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", never, " but actual type was ", threeValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<threeValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:22:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", never, " but actual type was ", threeValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<threeValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:23:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", never, " but actual type was ", string, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<infinityValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:24:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", never, " but actual type was ", string, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<infinityValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:25:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", never, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<infinitySquaredValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:26:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", never, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:27:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", "one", " but actual type was ", twoValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<twoValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:29:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", "one", " but actual type was ", twoValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<twoValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:30:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", twoValues, " but actual type was ", threeValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<threeValues, twoValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:31:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", "one", " but actual type was ", threeValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<threeValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:32:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", "one", " but actual type was ", string, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<infinityValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:33:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", "one", " but actual type was ", string, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<infinityValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:34:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", "one", " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<infinitySquaredValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:35:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", "one", " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:36:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", never, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<infinitySquaredValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:38:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", never, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, zeroValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:39:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", "one", " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<infinitySquaredValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:40:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", "one", " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, oneValue>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:41:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", twoValues, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<infinitySquaredValues, twoValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:42:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", twoValues, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, twoValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:43:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to extend or match ", string, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeExtends<infinitySquaredValues, infinityValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:44:18
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to strictly extend ", string, " but actual type was ", infinitySquaredValues, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    assertStatic<TypeStrictlyExtends<infinitySquaredValues, infinityValues>>();
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    at file://./$deno$stdin.ts:45:18
+
+    Found 33 errors.
+    `,
+  ),
 );
