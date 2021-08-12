@@ -5,87 +5,134 @@
  */
 export const assertStatic = <_ extends Pass>() => undefined;
 
-export type TypeEquals<Actual, Expected> =
-  TypeRelation<Actual, Expected> extends Identical ? Pass
-    : StaticFailure<[
-      "Expected type to exactly match ",
-      Expected,
-      " but actual type was ",
-      Actual,
-      ". ",
-      TypeRelation<Actual, Expected>,
-    ]>;
+export type TypeEquals<Actual, Expected> = Assert<
+  ExtendsAnyOf<
+    TypeRelation<Actual, Expected>,
+    [Identical]
+  >,
+  [
+    "Expected type to exactly match ",
+    Expected,
+    " but actual type was ",
+    Actual,
+    ". ",
+    TypeRelation<Actual, Expected>,
+  ]
+>;
 
-export type TypeExtends<Actual, Expected> =
-  TypeRelation<Actual, Expected> extends (Identical | ActualIsSubsetOfExpected)
-    ? Pass
-    : StaticFailure<[
-      "Expected type to extend ",
-      Expected,
-      " but actual type was ",
-      Actual,
-      ". ",
-      TypeRelation<Actual, Expected>,
-    ]>;
+export type TypeExtends<Actual, Expected> = Assert<
+  ExtendsAnyOf<
+    TypeRelation<Actual, Expected>,
+    [Identical, ActualIsSubsetOfExpected]
+  >,
+  [
+    "Expected type to extend or match ",
+    Expected,
+    " but actual type was ",
+    Actual,
+    ". ",
+    TypeRelation<Actual, Expected>,
+  ]
+>;
 
-export type TypeStrictlyExtends<Actual, Expected> =
-  TypeRelation<Actual, Expected> extends ActualIsSubsetOfExpected ? Pass
-    : StaticFailure<[
-      "Expected type to strictly extend ",
-      Expected,
-      " but actual type was ",
-      Actual,
-      ". ",
-      TypeRelation<Actual, Expected>,
-    ]>;
+export type TypeStrictlyExtends<Actual, Expected> = Assert<
+  ExtendsAnyOf<
+    TypeRelation<Actual, Expected>,
+    [ActualIsSubsetOfExpected]
+  >,
+  [
+    "Expected type to strictly extend ",
+    Expected,
+    " but actual type was ",
+    Actual,
+    ". ",
+    TypeRelation<Actual, Expected>,
+  ]
+>;
 
-/**
- * Returns a string constant type indicating the relationship between the
- * given two types.
- */
-// deno-fmt-ignore
-export type TypeRelation<Actual, Expected> =
-  Nonce extends Actual & Dunce
-  ? Nonce extends Expected & Dunce
-    ? Identical // both are `any`
-    : Unrelated // Actual is `any`
-  : Nonce extends Expected & Dunce
-    ? Unrelated // Expected is `any`
-    : // neither are `any`
-  Actual | Nonce extends Nonce
-  ? Expected | Nonce extends Nonce
-    ? Identical // both are `never`
-    : ActualIsSubsetOfExpected // Actual is `never`
-  : Expected | Nonce extends Nonce
-    ? ActualIsSupersetOfExpected // Expected is `never`
-    : // neither are `never`
-  Expected extends Actual
-    ? Actual extends Expected
-      ? Identical
-      : ActualIsSupersetOfExpected
-    : Actual extends Expected
-      ? ActualIsSubsetOfExpected
-      : Unrelated;
+type Assert<Condition extends Bool, FailureMessage> = IfThenElse<
+  Condition,
+  Pass,
+  StaticFailure<FailureMessage>
+>;
 
-// Possible relationships between two types, "Actual" and "Expected".
-//
-// The values are used in error messages when type assertions fail.
-//
-// Point of possible confusion: when you `extend` a type it might sound like you
-// are expanding the set of possible values and creating a superset, but you are
-// actually creating a subset because you add additional constraints.
+const True = Symbol();
+type True = typeof True;
+const False = Symbol();
+type False = typeof False;
+type Bool = True | False;
+
+type Extends<left, right> = left extends right ? True : False;
+type IfThenElse<condition extends Bool, then_value, else_value> =
+  [condition] extends [True] ? then_value : else_value;
+type Not<bool extends Bool> = IfThenElse<bool, False, True>;
+type And<left extends Bool, right extends Bool> = Extends<
+  [left, right],
+  [True, True]
+>;
+type Or<left extends Bool, right extends Bool> = Not<
+  Extends<[left, right], [False, False]>
+>;
+
+type ExtendsAnyOf<type, types> = Extends<type, type & types[keyof types]>;
+
+const Aleph = Symbol();
+type Aleph = typeof Aleph;
+const Omicron = Symbol();
+type Omicron = typeof Omicron;
+
+type IsNever<type> = Extends<[type | Aleph], [Aleph]>;
+type IsAny<type> = Extends<[Aleph], [type & Omicron]>;
+
+type TypeRelation<Actual, Expected> =
+  // handle anys
+  IfThenElse<
+    IsAny<Actual>,
+    IfThenElse<
+      IsAny<Expected>,
+      Identical,
+      ActualIsSupersetOfExpected
+    >,
+    IfThenElse<
+      IsAny<Expected>,
+      ActualIsSubsetOfExpected,
+      // handle nevers
+      IfThenElse<
+        IsNever<Actual>,
+        IfThenElse<
+          IsNever<Expected>,
+          Identical,
+          ActualIsSubsetOfExpected
+        >,
+        IfThenElse<
+          IsNever<Expected>,
+          ActualIsSupersetOfExpected,
+          // handle real relationships
+          IfThenElse<
+            Extends<Expected, Actual>,
+            IfThenElse<
+              Extends<Actual, Expected>,
+              Identical,
+              ActualIsSupersetOfExpected
+            >,
+            IfThenElse<
+              Extends<Actual, Expected>,
+              ActualIsSubsetOfExpected,
+              // types are mutually incompatible
+              Incompatible
+            >
+          >
+        >
+      >
+    >
+  >;
+
 type Identical = "Actual and expected types are identical.";
 type ActualIsSupersetOfExpected =
   "Actual type extends/is a strict superset of expected type.";
 type ActualIsSubsetOfExpected =
   "Actual type is extended by/is a strict subset of expected type.";
-type Unrelated = "Actual type is unrelated to expected type.";
+type Incompatible = "Actual type is incompatible with expected type.";
 
 type Pass = "Pass";
 type StaticFailure<Message> = [Message];
-
-// Two unique dummy types used to simplify some comparisons.
-const Nonce = Symbol();
-const Dunce = Symbol();
-type Nonce = typeof Nonce;
-type Dunce = typeof Dunce;

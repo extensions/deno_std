@@ -31,7 +31,7 @@ const typeErrorsTest = (code: string, expectedErrors: string) =>
     await writeAll(
       p.stdin,
       new TextEncoder().encode(`
-        import { assertStatic, TypeEquals, TypeExtends, TypeStrictlyExtends } from "./asserts_static.ts;";
+        import { assertStatic, TypeEquals, TypeExtends, TypeStrictlyExtends } from "./asserts_static.ts";
       ${code.trim()}
       `),
     );
@@ -47,7 +47,7 @@ const typeErrorsTest = (code: string, expectedErrors: string) =>
   };
 
 Deno.test(
-  "passing",
+  "some successes",
   () => {
     assertStatic<"Pass">();
     assertStatic<TypeEquals<2, 2 & number>>();
@@ -62,7 +62,7 @@ Deno.test(
 );
 
 Deno.test(
-  "failing",
+  "some failures",
   typeErrorsTest(
     `
     assertStatic<TypeEquals<2, number>>();
@@ -75,40 +75,43 @@ Deno.test(
     error: TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", number, " but actual type was ", 2, ". ", "Actual type is extended by/is a strict subset of expected type."]>' does not satisfy the constraint '"Pass"'.
     assertStatic<TypeEquals<2, number>>();
     ~~~~~~~~~~~~~~~~~~~~~
-    at file://./$deno$stdin.ts:3:18
-    error: TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", string, " but actual type was ", "hello", ". ", "Actual type is extended by/is a strict subset of expected type."]>' does not satisfy the constraint '"Pass"'.
+    at file://./$deno$stdin.ts:3:20
+
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", string, " but actual type was ", "hello", ". ", "Actual type is extended by/is a strict subset of expected type."]>' does not satisfy the constraint '"Pass"'.
     assertStatic<TypeEquals<typeof x, string>>();
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    at file://./$deno$stdin.ts:4:20
+    at file://./$deno$stdin.ts:5:18
 
     TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", 2, " but actual type was ", string | number, ". ", "Actual type extends/is a strict superset of expected type."]>' does not satisfy the constraint '"Pass"'.
     assertStatic<TypeEquals<2 | (number | string), 2>>();
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    at file://./$deno$stdin.ts:5:20
+    at file://./$deno$stdin.ts:6:18
 
-    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", "hello", " but actual type was ", 2, ". ", "Actual type is unrelated to expected type."]>' does not satisfy the constraint '"Pass"'.
+    TS2344 [ERROR]: Type 'StaticFailure<["Expected type to exactly match ", "hello", " but actual type was ", 2, ". ", "Actual type is incompatible with expected type."]>' does not satisfy the constraint '"Pass"'.
     assertStatic<TypeEquals<2, typeof x>>();
     ~~~~~~~~~~~~~~~~~~~~~~~
-    at file://./$deno$stdin.ts:6:20
+    at file://./$deno$stdin.ts:7:18
 
-    Found 3 errors.
+    Found 4 errors.
     `,
   ),
 );
 
 Deno.test(
-  "unions",
+  "successful unions",
   () => {
     type zeroValues = never;
     type oneValue = zeroValues | "one";
     type twoValues = oneValue | "two";
-    type infinityValues = twoValues | string;
+    type threeValues = twoValues | "three";
+    type infinityValues = threeValues | string;
     type infinitySquaredValues = infinityValues | bigint;
 
     // every type should equal itself
     assertStatic<TypeEquals<zeroValues, zeroValues>>();
     assertStatic<TypeEquals<oneValue, oneValue>>();
     assertStatic<TypeEquals<twoValues, twoValues>>();
+    assertStatic<TypeEquals<threeValues, threeValues>>();
     assertStatic<TypeEquals<infinityValues, infinityValues>>();
     assertStatic<TypeEquals<infinitySquaredValues, infinitySquaredValues>>();
 
@@ -118,6 +121,8 @@ Deno.test(
     assertStatic<TypeStrictlyExtends<zeroValues, oneValue>>();
     assertStatic<TypeExtends<zeroValues, twoValues>>();
     assertStatic<TypeStrictlyExtends<zeroValues, twoValues>>();
+    assertStatic<TypeExtends<zeroValues, threeValues>>();
+    assertStatic<TypeStrictlyExtends<zeroValues, threeValues>>();
     assertStatic<TypeExtends<zeroValues, infinityValues>>();
     assertStatic<TypeStrictlyExtends<zeroValues, infinityValues>>();
     assertStatic<TypeExtends<zeroValues, infinitySquaredValues>>();
@@ -127,6 +132,8 @@ Deno.test(
     assertStatic<TypeExtends<oneValue, oneValue>>();
     assertStatic<TypeExtends<oneValue, twoValues>>();
     assertStatic<TypeStrictlyExtends<oneValue, twoValues>>();
+    assertStatic<TypeStrictlyExtends<twoValues, threeValues>>();
+    assertStatic<TypeStrictlyExtends<oneValue, threeValues>>();
     assertStatic<TypeExtends<oneValue, infinityValues>>();
     assertStatic<TypeStrictlyExtends<oneValue, infinityValues>>();
     assertStatic<TypeExtends<oneValue, infinitySquaredValues>>();
@@ -141,6 +148,10 @@ Deno.test(
     assertStatic<TypeStrictlyExtends<twoValues, infinitySquaredValues>>();
     assertStatic<TypeExtends<infinityValues, infinitySquaredValues>>();
     assertStatic<TypeStrictlyExtends<infinityValues, infinitySquaredValues>>();
-    assertStatic<TypeExtends<infinitySquaredValues, infinitySquaredValues>>();
   },
+);
+
+Deno.test(
+  "failed unions",
+  typeErrorsTest(``, ``),
 );
