@@ -1,59 +1,71 @@
-/**
- * Ensures that a static assertion is upheld, or triggers a type error.
- *
- * This is a no-op at runtime; it's only meaningful during type checking.
- */
-export const assertStatic = <_ extends Pass>() => undefined;
+export { assertStatic };
 
-export type TypeEquals<Actual, Expected> = Assert<
+export type {
+  AssertEquals as TypeEquals,
+  AssertExtends as TypeExtends,
+  AssertStatic,
+  AssertStrictlyExtends as TypeStrictlyExtends,
+};
+
+type Pass = "static assertions must pass";
+type Failure<Message> = [Message];
+
+const assertStatic = <Assertion extends Pass>() => undefined;
+
+// deno-lint-ignore no-explicit-any
+type AssertStatic<Assertion extends Pass> = any;
+
+assertStatic<AssertEquals<2, 2 | 3>>();
+
+type Assertion<Condition extends Bool, FailureMessage> = IfThen<
+  Condition,
+  Pass,
+  Failure<FailureMessage>
+>;
+
+type AssertEquals<Left, Right> = Assertion<
   ExtendsAnyOf<
-    TypeRelation<Actual, Expected>,
+    TypeRelation<Left, Right>,
     [Identical]
   >,
   [
-    "Expected type to exactly match ",
-    Expected,
-    " but actual type was ",
-    Actual,
+    "Expected left type to exactly match right type ",
+    Right,
+    " but left type was ",
+    Left,
     ". ",
-    TypeRelation<Actual, Expected>,
+    TypeRelation<Left, Right>,
   ]
 >;
 
-export type TypeExtends<Actual, Expected> = Assert<
+type AssertExtends<Left, Right> = Assertion<
   ExtendsAnyOf<
-    TypeRelation<Actual, Expected>,
-    [Identical, ActualIsSubsetOfExpected]
+    TypeRelation<Left, Right>,
+    [Identical, LeftIsSubsetOfRight]
   >,
   [
-    "Expected type to extend or match ",
-    Expected,
-    " but actual type was ",
-    Actual,
+    "Expected left type to extend or match right type ",
+    Right,
+    " but left type was ",
+    Left,
     ". ",
-    TypeRelation<Actual, Expected>,
+    TypeRelation<Left, Right>,
   ]
 >;
 
-export type TypeStrictlyExtends<Actual, Expected> = Assert<
+type AssertStrictlyExtends<Left, Right> = Assertion<
   ExtendsAnyOf<
-    TypeRelation<Actual, Expected>,
-    [ActualIsSubsetOfExpected]
+    TypeRelation<Left, Right>,
+    [LeftIsSubsetOfRight]
   >,
   [
-    "Expected type to strictly extend ",
-    Expected,
-    " but actual type was ",
-    Actual,
+    "Expected left type to strictly extend right type ",
+    Right,
+    " but left type was ",
+    Left,
     ". ",
-    TypeRelation<Actual, Expected>,
+    TypeRelation<Left, Right>,
   ]
->;
-
-type Assert<Condition extends Bool, FailureMessage> = IfThenElse<
-  Condition,
-  Pass,
-  StaticFailure<FailureMessage>
 >;
 
 const True = Symbol();
@@ -62,19 +74,24 @@ const False = Symbol();
 type False = typeof False;
 type Bool = True | False;
 
-type Extends<left, right> = left extends right ? True : False;
-type IfThenElse<condition extends Bool, then_value, else_value> =
-  [condition] extends [True] ? then_value : else_value;
-type Not<bool extends Bool> = IfThenElse<bool, False, True>;
-type And<left extends Bool, right extends Bool> = Extends<
-  [left, right],
+type Extends<Left, Right> = Left extends Right ? True : False;
+type ExtendsAnyOf<type, types> = Extends<type, type & types[keyof types]>;
+
+type IfThen<Condition extends Bool, Then, Else = never> = [Condition] extends
+  [True] ? Then
+  : Else;
+
+type Not<Condition extends Bool> = IfThen<Condition, False, True>;
+type And<Left extends Bool, Right extends Bool> = Extends<
+  [Left, Right],
   [True, True]
 >;
-type Or<left extends Bool, right extends Bool> = Not<
-  Extends<[left, right], [False, False]>
+type Or<Left extends Bool, Right extends Bool> = Not<
+  Extends<
+    [Left, Right],
+    [False, False]
+  >
 >;
-
-type ExtendsAnyOf<type, types> = Extends<type, type & types[keyof types]>;
 
 const Aleph = Symbol();
 type Aleph = typeof Aleph;
@@ -84,40 +101,40 @@ type Omicron = typeof Omicron;
 type IsNever<type> = Extends<[type | Aleph], [Aleph]>;
 type IsAny<type> = Extends<[Aleph], [type & Omicron]>;
 
-type TypeRelation<Actual, Expected> =
+type TypeRelation<Left, Right> =
   // handle anys
-  IfThenElse<
-    IsAny<Actual>,
-    IfThenElse<
-      IsAny<Expected>,
+  IfThen<
+    IsAny<Left>,
+    IfThen<
+      IsAny<Right>,
       Identical,
-      ActualIsSupersetOfExpected
+      LeftIsSupersetOfRight
     >,
-    IfThenElse<
-      IsAny<Expected>,
-      ActualIsSubsetOfExpected,
+    IfThen<
+      IsAny<Right>,
+      LeftIsSubsetOfRight,
       // handle nevers
-      IfThenElse<
-        IsNever<Actual>,
-        IfThenElse<
-          IsNever<Expected>,
+      IfThen<
+        IsNever<Left>,
+        IfThen<
+          IsNever<Right>,
           Identical,
-          ActualIsSubsetOfExpected
+          LeftIsSubsetOfRight
         >,
-        IfThenElse<
-          IsNever<Expected>,
-          ActualIsSupersetOfExpected,
+        IfThen<
+          IsNever<Right>,
+          LeftIsSupersetOfRight,
           // handle real relationships
-          IfThenElse<
-            Extends<Expected, Actual>,
-            IfThenElse<
-              Extends<Actual, Expected>,
+          IfThen<
+            Extends<Right, Left>,
+            IfThen<
+              Extends<Left, Right>,
               Identical,
-              ActualIsSupersetOfExpected
+              LeftIsSupersetOfRight
             >,
-            IfThenElse<
-              Extends<Actual, Expected>,
-              ActualIsSubsetOfExpected,
+            IfThen<
+              Extends<Left, Right>,
+              LeftIsSubsetOfRight,
               // types are mutually incompatible
               Incompatible
             >
@@ -127,12 +144,7 @@ type TypeRelation<Actual, Expected> =
     >
   >;
 
-type Identical = "Actual and expected types are identical.";
-type ActualIsSupersetOfExpected =
-  "Actual type extends/is a strict superset of expected type.";
-type ActualIsSubsetOfExpected =
-  "Actual type is extended by/is a strict subset of expected type.";
-type Incompatible = "Actual type is incompatible with expected type.";
-
-type Pass = "Pass";
-type StaticFailure<Message> = [Message];
+type Identical = "Left and expected types are identical.";
+type LeftIsSupersetOfRight = "Left type is a strict superset of right type.";
+type LeftIsSubsetOfRight = "Left type is a strict subset of right type.";
+type Incompatible = "Left type is incompatible with right type.";

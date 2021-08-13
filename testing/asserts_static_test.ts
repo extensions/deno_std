@@ -138,6 +138,15 @@ Deno.test(
     assertStatic<TypeStrictlyExtends<oneValue, infinityValues>>();
     assertStatic<TypeExtends<oneValue, infinitySquaredValues>>();
     assertStatic<TypeStrictlyExtends<oneValue, infinitySquaredValues>>();
+    assertStatic<TypeEquals<{ x: twoValues }, { x: twoValues }>>();
+    assertStatic<TypeStrictlyExtends<{ x: twoValues }, { x: threeValues }>>();
+    assertStatic<
+      TypeStrictlyExtends<
+        { x: twoValues; y: 2 },
+        { x: twoValues }
+      >
+    >();
+    assertStatic<TypeStrictlyExtends<{ x: oneValue }, { x: twoValues }>>();
 
     // our largest set should superset every type
     assertStatic<TypeExtends<zeroValues, infinitySquaredValues>>();
@@ -369,3 +378,10 @@ Deno.test(
     `,
   ),
 );
+
+let _x = [
+  [
+    `assertStatic<TypeEquals<2, 3>>()`,
+    `["Expected type to exactly match ", "hello", " but actual type was ", 2, ". ", "Actual type is incompatible with expected type."]`,
+  ],
+];
