@@ -15,6 +15,7 @@ import {
   assertStringIncludes,
   assertThrows,
   assertThrowsAsync,
+  assertTypescriptErrors,
   equal,
   fail,
   unimplemented,
@@ -1064,3 +1065,23 @@ Deno.test("Assert Throws Async promise rejected with custom Error", async () => 
     'Expected error to be instance of "CustomError", but was "AnotherCustomError".',
   );
 });
+
+Deno.test("test errors or something", () =>
+  assertTypescriptErrors(import.meta.url, (ts) =>
+    ts`
+      export {};
+
+      {
+        const x = 1;
+        const y: 1 = 1;
+        const z: number = 1;
+      }${`
+
+      `}
+
+      {
+        const x: 2 = 3;
+      }${`
+        TS2322 [ERROR]: Type '3' is not assignable to type '2'.
+      `}
+    `));

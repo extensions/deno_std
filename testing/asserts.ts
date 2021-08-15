@@ -676,6 +676,20 @@ export async function assertThrowsAsync<T = void>(
   }
 }
 
+export async function assertTypescriptErrors(
+  location: string,
+  body: (
+    ts: (code: TemplateStringsArray, ...errors: Array<string>) => Array<{
+      code: string;
+      errors: string;
+    }>,
+  ) => Array<{
+    code: string;
+    errors: string;
+  }>,
+) {
+}
+
 /** Use this to stub out methods that will throw when invoked. */
 export function unimplemented(msg?: string): never {
   throw new AssertionError(msg || "unimplemented");
