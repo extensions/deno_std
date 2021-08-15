@@ -13,6 +13,8 @@ import {
   white,
 } from "../fmt/colors.ts";
 import { diff, DiffResult, diffstr, DiffType } from "./_diff.ts";
+import { dirname, fromFileUrl } from "../path/mod.ts";
+import { writeAll } from "../io/util.ts";
 
 const CAN_NOT_DISPLAY = "[Cannot display]";
 
@@ -676,10 +678,18 @@ export async function assertThrowsAsync<T = void>(
   }
 }
 
-export async function assertTypescriptErrors(
-  location: string,
+/**
+ * Asserts that compiling the given TypeScript code using the
+ * given location produces the expected errors for each of the
+ * preceeding blocks of code.
+ */
+export async function _assertTypescriptErrors(
+  meta: ImportMeta,
   body: (
-    ts: (code: TemplateStringsArray, ...errors: Array<string>) => Array<{
+    ts: (
+      codeChunks: TemplateStringsArray,
+      ...errorChunks: Array<string>
+    ) => Array<{
       code: string;
       errors: string;
     }>,
@@ -688,6 +698,51 @@ export async function assertTypescriptErrors(
     errors: string;
   }>,
 ) {
+  const cwd = dirname(fromFileUrl(meta.url));
+  const env = {
+    "NO_COLOR": "",
+  };
+  const cmd = [
+    Deno.execPath(),
+    "run",
+    "--quiet",
+    "-",
+  ];
+
+  const chunks = body((codeChunks, ...errorChunks) =>
+    codeChunks.map((code, i) => ({
+      code: `\n${code ?? ""}\n`,
+      errors: (errorChunks[i] ?? "").trim().replace(/^\s+/g, ""),
+    }))
+  );
+
+  const input = new TextEncoder().encode(chunks.map((c) => c.code).join(""));
+  const expectedErrors = chunks.map((c) => c.errors).join("\n");
+
+  const process = Deno.run({
+    cmd,
+    cwd,
+    env,
+    stdout: "inherit",
+    stdin: "piped",
+    stderr: "piped",
+  });
+
+  await writeAll(process.stdin, input);
+  process.stdin.close();
+
+  const output = await process.stderrOutput();
+  process.close();
+
+  const actualErrors = new TextDecoder().decode(output)
+    .replace(/^error: /m, "")
+    .replace(/^(TS\d+) \[(ERROR|WARN)\]:/g, "$1:")
+    .replace(/^\s+/g, "")
+    .replace(/\s+$/g, "")
+    .replace(/\n{2,}/gm, "\n")
+    .trim();
+
+  assertEquals(actualErrors, expectedErrors);
 }
 
 /** Use this to stub out methods that will throw when invoked. */

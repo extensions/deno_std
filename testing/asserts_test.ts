@@ -1,5 +1,6 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 import {
+  _assertTypescriptErrors,
   _format,
   assert,
   assertArrayIncludes,
@@ -15,7 +16,6 @@ import {
   assertStringIncludes,
   assertThrows,
   assertThrowsAsync,
-  assertTypescriptErrors,
   equal,
   fail,
   unimplemented,
@@ -1066,8 +1066,8 @@ Deno.test("Assert Throws Async promise rejected with custom Error", async () => 
   );
 });
 
-Deno.test("test errors or something", () =>
-  assertTypescriptErrors(import.meta.url, (ts) =>
+Deno.test("assertTypescriptErrors", () =>
+  _assertTypescriptErrors(import.meta, (ts) =>
     ts`
       export {};
 
@@ -1082,6 +1082,6 @@ Deno.test("test errors or something", () =>
       {
         const x: 2 = 3;
       }${`
-        TS2322 [ERROR]: Type '3' is not assignable to type '2'.
+        TS2322: Type '3' is not assignable to type '2'.
       `}
     `));
