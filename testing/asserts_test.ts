@@ -1068,14 +1068,16 @@ Deno.test("Assert Throws Async promise rejected with custom Error", async () => 
 
 Deno.test("assertTypescriptErrors/successes", async () => {
   await _assertTypescriptErrors(import.meta, (ts) =>
-    ts`
+    ts /* ts */`
     export {};
 
     {
       const x = 1;
       const y: 1 = 1;
       const z: number = 1;
-    }${`// no errors`}
+    }
+
+    ${`// no errors yet`}
 
     {
       const x: 2 = 3;
@@ -1085,6 +1087,26 @@ Deno.test("assertTypescriptErrors/successes", async () => {
       TS2322 [ERROR]: Type '3' is not assignable to type '2'.
       TS2322 [ERROR]: Type '"2"' is not assignable to type '2'.
       TS2322 [ERROR]: Type '2n' is not assignable to type '2'.
+    `}
+
+    {
+      const x = 2;
+      const x = 3;
+    }${`
+      TS2451 [ERROR]: Cannot redeclare block-scoped variable 'x'.
+    `}
+
+    export function f() { return 1; }
+    export const g = () => {};
+    export function f() { return 2; }
+    export const g = () => {};
+    ${`
+      TS2451 [ERROR]: Cannot redeclare block-scoped variable 'g'.
+      TS2451 [ERROR]: Cannot redeclare block-scoped variable 'g'.
+      TS2323 [ERROR]: Cannot redeclare exported variable 'f'.
+      TS2393 [ERROR]: Duplicate function implementation.
+      TS2323 [ERROR]: Cannot redeclare exported variable 'f'.
+      TS2393 [ERROR]: Duplicate function implementation.
     `}
   `);
 });

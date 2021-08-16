@@ -704,7 +704,7 @@ export async function _assertTypescriptErrors(
   ];
 
   const typescriptDiagnosticPattern =
-    /^(?:error: )?(?<error>TS\d+[^\n]+?)\n(?<excerpt>[^\n]+?)\n(?<arrow>[\s\^\~]+)\n\s+at (?<path>[^\n]+?):(?<line>\d+):(?<column>\d+)$/gm;
+    /^(?:error: )?(?<error>TS\d+[^\n]+?)\n(?<excerpt>[^\n]+?)\n(?<arrow>[ \^\~]+)\n +at (?<path>[^\n]+?):(?<line>\d+):(?<column>\d+)$/gm;
 
   const matchDiagnostics = (tscOutput: string) =>
     [
@@ -715,7 +715,6 @@ export async function _assertTypescriptErrors(
       error: d.groups!.error,
       path: d.groups!.path,
       line: Number(d.groups!.line),
-      column: Number(d.groups!.column),
     }));
 
   const normalizeExpectedDiagnostics = (expectedChunk: string) =>
@@ -725,7 +724,8 @@ export async function _assertTypescriptErrors(
 
   const inputChunks = body((codeChunks, ...errorChunks) =>
     codeChunks.map((code, i) => ({
-      code: `${code ?? ""}\n`,
+      lines: [...code.matchAll(/\n/g)].length + 1,
+      code: `${code}\n`,
       expectedErrors: normalizeExpectedDiagnostics(errorChunks[i] ?? ""),
       actualErrors: [],
     }))
@@ -750,7 +750,19 @@ export async function _assertTypescriptErrors(
 
   const actualErrors = matchDiagnostics(output);
 
+  for (const error of actualErrors) {
+    if (!error.path.endsWith("$deno$stdin.ts")) {
+      fail(
+        `got unexpected type error, from outside of test input file: ${
+          JSON.stringify(error, null, 2)
+        }`,
+      );
+    }
+  }
+
   const actualErrorStrings = actualErrors.map((d) => d.error).join("\n");
+
+  console.log(actualErrors);
 
   const expectedErrorsString = inputChunks
     .map((c) => c.expectedErrors.join("\n")).join("\n\n");
