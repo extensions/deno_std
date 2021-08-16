@@ -685,18 +685,12 @@ export async function assertThrowsAsync<T = void>(
  */
 export async function _assertTypescriptErrors(
   meta: ImportMeta,
-  body: (
+  body: <T>(
     ts: (
       codeChunks: TemplateStringsArray,
-      ...errorChunks: Array<string>
-    ) => Array<{
-      code: string;
-      errors: string;
-    }>,
-  ) => Array<{
-    code: string;
-    errors: string;
-  }>,
+      ...errorChunks: Array<string | null | undefined>
+    ) => T,
+  ) => T,
 ) {
   const cwd = dirname(fromFileUrl(meta.url));
   const env = {
@@ -709,40 +703,59 @@ export async function _assertTypescriptErrors(
     "-",
   ];
 
-  const chunks = body((codeChunks, ...errorChunks) =>
+  const typescriptDiagnosticPattern =
+    /^(?:error: )?(?<error>TS\d+[^\n]+?)\n(?<excerpt>[^\n]+?)\n(?<arrow>[\s\^\~]+)\n\s+at (?<path>[^\n]+?):(?<line>\d+):(?<column>\d+)$/gm;
+
+  const matchDiagnostics = (tscOutput: string) =>
+    [
+      ...tscOutput
+        .replace(/^error: /m, "")
+        .matchAll(typescriptDiagnosticPattern),
+    ].map((d) => ({
+      error: d.groups!.error,
+      path: d.groups!.path,
+      line: Number(d.groups!.line),
+      column: Number(d.groups!.column),
+    }));
+
+  const normalizeExpectedDiagnostics = (expectedChunk: string) =>
+    expectedChunk.split(/\n+/g).map((s) => s.trim()).filter((s) =>
+      s && !s.startsWith("//")
+    );
+
+  const inputChunks = body((codeChunks, ...errorChunks) =>
     codeChunks.map((code, i) => ({
-      code: `\n${code ?? ""}\n`,
-      errors: (errorChunks[i] ?? "").trim().replace(/^\s+/g, ""),
+      code: `${code ?? ""}\n`,
+      expectedErrors: normalizeExpectedDiagnostics(errorChunks[i] ?? ""),
+      actualErrors: [],
     }))
   );
 
-  const input = new TextEncoder().encode(chunks.map((c) => c.code).join(""));
-  const expectedErrors = chunks.map((c) => c.errors).join("\n");
+  const inputCode = inputChunks.map((c) => c.code).join("");
 
   const process = Deno.run({
     cmd,
     cwd,
     env,
     stdout: "inherit",
-    stdin: "piped",
     stderr: "piped",
+    stdin: "piped",
   });
 
-  await writeAll(process.stdin, input);
+  await writeAll(process.stdin, new TextEncoder().encode(inputCode));
   process.stdin.close();
 
-  const output = await process.stderrOutput();
+  const output = new TextDecoder().decode(await process.stderrOutput());
   process.close();
 
-  const actualErrors = new TextDecoder().decode(output)
-    .replace(/^error: /m, "")
-    .replace(/^(TS\d+) \[(ERROR|WARN)\]:/g, "$1:")
-    .replace(/^\s+/g, "")
-    .replace(/\s+$/g, "")
-    .replace(/\n{2,}/gm, "\n")
-    .trim();
+  const actualErrors = matchDiagnostics(output);
 
-  assertEquals(actualErrors, expectedErrors);
+  const actualErrorStrings = actualErrors.map((d) => d.error).join("\n");
+
+  const expectedErrorsString = inputChunks
+    .map((c) => c.expectedErrors.join("\n")).join("\n\n");
+
+  assertEquals(actualErrorStrings, expectedErrorsString);
 }
 
 /** Use this to stub out methods that will throw when invoked. */

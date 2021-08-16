@@ -1066,22 +1066,25 @@ Deno.test("Assert Throws Async promise rejected with custom Error", async () => 
   );
 });
 
-Deno.test("assertTypescriptErrors", () =>
-  _assertTypescriptErrors(import.meta, (ts) =>
+Deno.test("assertTypescriptErrors/successes", async () => {
+  await _assertTypescriptErrors(import.meta, (ts) =>
     ts`
-      export {};
+    export {};
 
-      {
-        const x = 1;
-        const y: 1 = 1;
-        const z: number = 1;
-      }${`
+    {
+      const x = 1;
+      const y: 1 = 1;
+      const z: number = 1;
+    }${`// no errors`}
 
-      `}
-
-      {
-        const x: 2 = 3;
-      }${`
-        TS2322: Type '3' is not assignable to type '2'.
-      `}
-    `));
+    {
+      const x: 2 = 3;
+      const y: 2 = "2";
+      const z: 2 = 2n;
+    }${`
+      TS2322 [ERROR]: Type '3' is not assignable to type '2'.
+      TS2322 [ERROR]: Type '"2"' is not assignable to type '2'.
+      TS2322 [ERROR]: Type '2n' is not assignable to type '2'.
+    `}
+  `);
+});
