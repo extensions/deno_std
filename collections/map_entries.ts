@@ -1,6 +1,5 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
-
-import { Selector } from "./types.ts";
+// This module is browser compatible.
 
 /**
  * Applies the given transformer to all entries in the given record and returns a new record containing the results
@@ -8,7 +7,8 @@ import { Selector } from "./types.ts";
  * Example:
  *
  * ```ts
- * import { mapEntries } from "./map_entries.ts";
+ * import { mapEntries } from "https://deno.land/std@$STD_VERSION/collections/mod.ts";
+ * import { assertEquals } from "https://deno.land/std@$STD_VERSION/testing/asserts.ts";
  *
  * const usersById = {
  *     'a2e': { name: 'Kim', age: 22 },
@@ -20,7 +20,7 @@ import { Selector } from "./types.ts";
  *     ([ id, { name, age } ]) => [ name, age ],
  * )
  *
- * console.assert(agesByNames === {
+ * assertEquals(agesByNames, {
  *     'Kim': 22,
  *     'Anna': 31,
  *     'Tim': 58,
@@ -28,8 +28,8 @@ import { Selector } from "./types.ts";
  * ```
  */
 export function mapEntries<T, O>(
-  record: Record<string, T>,
-  transformer: Selector<[string, T], [string, O]>,
+  record: Readonly<Record<string, T>>,
+  transformer: (entry: [string, T]) => [string, O],
 ): Record<string, O> {
   const ret: Record<string, O> = {};
   const entries = Object.entries(record);

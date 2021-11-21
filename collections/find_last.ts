@@ -1,24 +1,26 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
-
-import { Predicate } from "./types.ts";
+// This module is browser compatible.
 
 /**
+ * @deprecated Use `Array.prototype.findLast`. This function will be removed in std@0.117.0.
+ *
  * Returns the last element in the given array matching the given predicate
  *
  * Example:
  *
  * ```ts
- * import { findLast } from "./find_last.ts";
+ * import { findLast } from "https://deno.land/std@$STD_VERSION/collections/mod.ts";
+ * import { assertEquals } from "https://deno.land/std@$STD_VERSION/testing/asserts.ts";
  *
  * const numbers = [ 4, 2, 7 ]
  * const lastEvenNumber = findLast(numbers, it => it % 2 === 0)
  *
- * console.assert(lastEvenNumber === 2)
+ * assertEquals(lastEvenNumber, 2)
  * ```
  */
 export function findLast<T>(
-  array: Array<T>,
-  predicate: Predicate<T>,
+  array: readonly T[],
+  predicate: (el: T) => boolean,
 ): T | undefined {
   for (let i = array.length - 1; i >= 0; i -= 1) {
     const element = array[i];

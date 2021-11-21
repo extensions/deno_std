@@ -1,9 +1,9 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
-import { BufReader, BufWriter } from "../io/bufio.ts";
+import { Buffer, BufReader, BufWriter } from "../io/buffer.ts";
 import {
   assert,
   assertEquals,
-  assertThrowsAsync,
+  assertRejects,
   fail,
 } from "../testing/asserts.ts";
 import { TextProtoReader } from "../textproto/mod.ts";
@@ -21,9 +21,8 @@ import {
   writeFrame,
 } from "./mod.ts";
 import { delay } from "../async/delay.ts";
-import { serve } from "../http/server.ts";
+import { serve } from "../http/server_legacy.ts";
 import { deferred } from "../async/deferred.ts";
-import { Buffer } from "../io/buffer.ts";
 
 Deno.test("[ws] read unmasked text frame", async () => {
   // unmasked single text frame with payload "Hello"
@@ -101,8 +100,19 @@ Deno.test("[ws] read unmasked ping / pong frame", async () => {
     new Buffer(ping.payload).bytes(),
   );
   assertEquals(actual1, "Hello");
-  // deno-fmt-ignore
-  const pongFrame = [0x8a, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51, 0x58]
+  const pongFrame = [
+    0x8a,
+    0x85,
+    0x37,
+    0xfa,
+    0x21,
+    0x3d,
+    0x7f,
+    0x9f,
+    0x4d,
+    0x51,
+    0x58,
+  ];
   const buf2 = new BufReader(new Buffer(new Uint8Array(pongFrame)));
   const pong = await readFrame(buf2);
   assertEquals(pong.opcode, OpCode.Pong);
@@ -227,7 +237,7 @@ Deno.test("[ws] handshake should not send search when it's empty", async () => {
   const writer = new Buffer();
   const reader = new Buffer(new TextEncoder().encode("HTTP/1.1 400\r\n"));
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await handshake(
         new URL("ws://example.com"),
@@ -252,7 +262,7 @@ Deno.test(
       new TextEncoder().encode("HTTP/1.1 400\r\n"),
     );
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await handshake(
           new URL("ws://example.com?a=1"),
@@ -352,12 +362,12 @@ Deno.test(
     const conn = dummyConn(eofReader, buf);
     const sock = createWebSocket({ conn });
     sock.closeForce();
-    await assertThrowsAsync(
+    await assertRejects(
       () => sock.send("hello"),
       Deno.errors.ConnectionReset,
     );
-    await assertThrowsAsync(() => sock.ping(), Deno.errors.ConnectionReset);
-    await assertThrowsAsync(() => sock.close(0), Deno.errors.ConnectionReset);
+    await assertRejects(() => sock.ping(), Deno.errors.ConnectionReset);
+    await assertRejects(() => sock.close(0), Deno.errors.ConnectionReset);
   },
 );
 
@@ -381,7 +391,7 @@ Deno.test(
 
 Deno.test({
   name:
-    "[ws] WebSocket should reject sending promise when connection reset forcely",
+    "[ws] WebSocket should reject sending promise when connection reset forcefully",
   fn: async () => {
     const buf = new Buffer();
     let timer: number | undefined;

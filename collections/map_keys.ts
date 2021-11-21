@@ -1,6 +1,5 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
-
-import { Selector } from "./types.ts";
+// This module is browser compatible.
 
 /**
  * Applies the given transformer to all keys in the given record's entries and returns a new record containing the
@@ -11,11 +10,12 @@ import { Selector } from "./types.ts";
  * Example:
  *
  * ```ts
- * import { mapKeys } from "./map_keys.ts";
+ * import { mapKeys } from "https://deno.land/std@$STD_VERSION/collections/mod.ts";
+ * import { assertEquals } from "https://deno.land/std@$STD_VERSION/testing/asserts.ts";
  *
  * const counts = { a: 5, b: 3, c: 8 }
  *
- * console.assert(mapKeys(counts, it => it.toUpperCase()) === {
+ * assertEquals(mapKeys(counts, it => it.toUpperCase()), {
  *     A: 5,
  *     B: 3,
  *     C: 8,
@@ -23,8 +23,8 @@ import { Selector } from "./types.ts";
  * ```
  */
 export function mapKeys<T>(
-  record: Record<string, T>,
-  transformer: Selector<string, string>,
+  record: Readonly<Record<string, T>>,
+  transformer: (key: string) => string,
 ): Record<string, T> {
   const ret: Record<string, T> = {};
   const keys = Object.keys(record);

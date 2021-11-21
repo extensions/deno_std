@@ -27,8 +27,9 @@ import {
   writeOrBuffer,
 } from "./writable_internal.ts";
 import type { Encodings } from "../_utils.ts";
+import { nextTick } from "../_next_tick.ts";
 
-type WritableEncodings = Encodings | "buffer";
+export type WritableEncodings = Encodings | "buffer";
 
 export interface WritableOptions {
   autoDestroy?: boolean;
@@ -64,13 +65,15 @@ export class WritableState {
   allBuffers = true;
   allNoop = true;
   autoDestroy: boolean;
-  buffered: Array<{
-    allBuffers?: boolean;
-    // deno-lint-ignore no-explicit-any
-    chunk: any;
-    encoding: string;
-    callback: (error: Error) => void;
-  }> = [];
+  buffered: Array<
+    {
+      allBuffers?: boolean;
+      // deno-lint-ignore no-explicit-any
+      chunk: any;
+      encoding: string;
+      callback: (error: Error) => void;
+    } | null
+  > = [];
   bufferedIndex = 0;
   bufferProcessing = false;
   closed = false;
@@ -135,9 +138,8 @@ export class WritableState {
 }
 
 /** A bit simpler than readable streams.
-* Implement an async `._write(chunk, encoding, cb)`, and it'll handle all
-* the drain event emission and buffering.
-*/
+ * Implement an async `._write(chunk, encoding, cb)`, and it'll handle all
+ * the drain event emission and buffering. */
 class Writable extends Stream {
   _final?: (
     this: Writable,
@@ -232,11 +234,11 @@ class Writable extends Stream {
     w.closeEmitted = false;
     w.errored = null;
     w.errorEmitted = false;
-    w.ended = false;
-    w.ending = false;
     w.finalCalled = false;
     w.prefinished = false;
-    w.finished = false;
+    w.ended = w.writable === false;
+    w.ending = w.writable === false;
+    w.finished = w.writable === false;
   }
 
   _destroy(err: Error | null, cb: (error?: Error | null) => void) {
@@ -246,17 +248,17 @@ class Writable extends Stream {
   destroy(err?: Error | null, cb?: () => void) {
     const state = this._writableState;
     if (!state.destroyed) {
-      queueMicrotask(() => errorBuffer(state));
+      nextTick(errorBuffer, state);
     }
     destroy.call(this, err, cb);
     return this;
   }
 
-  end(cb?: () => void): void;
+  end(cb?: () => void): this;
   // deno-lint-ignore no-explicit-any
-  end(chunk: any, cb?: () => void): void;
+  end(chunk: any, cb?: () => void): this;
   // deno-lint-ignore no-explicit-any
-  end(chunk: any, encoding: WritableEncodings, cb?: () => void): void;
+  end(chunk: any, encoding: WritableEncodings, cb?: () => void): this;
 
   end(
     // deno-lint-ignore no-explicit-any
@@ -306,9 +308,10 @@ class Writable extends Stream {
 
     if (typeof cb === "function") {
       if (err || state.finished) {
-        queueMicrotask(() => {
-          (cb as (error?: Error | undefined) => void)(err);
-        });
+        nextTick(
+          cb as (error?: Error | undefined) => void,
+          err,
+        );
       } else {
         state[kOnFinished].push(cb);
       }
@@ -403,7 +406,7 @@ class Writable extends Stream {
     }
 
     if (err) {
-      queueMicrotask(() => cb(err));
+      nextTick(cb, err);
       errorOrDestroy(this, err, true);
       return false;
     }
