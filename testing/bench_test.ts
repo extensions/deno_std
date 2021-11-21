@@ -10,8 +10,8 @@ import {
 import {
   assert,
   assertEquals,
+  assertRejects,
   assertThrows,
-  assertThrowsAsync,
 } from "./asserts.ts";
 
 Deno.test({
@@ -40,7 +40,7 @@ Deno.test({
     });
 
     bench(async function promiseAllFetchDenolandX10(b) {
-      const urls = new Array(10).fill("https://deno.land/");
+      const urls = Array.from({ length: 10 }, () => "https://deno.land/");
       b.start();
       await Promise.all(
         urls.map(
@@ -117,7 +117,7 @@ Deno.test({
 Deno.test({
   name: "Bench without stop should throw",
   fn: async function () {
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         bench(function benchWithoutStop(b): void {
           b.start();
@@ -134,7 +134,7 @@ Deno.test({
 Deno.test({
   name: "Bench without start should throw",
   fn: async function () {
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         bench(function benchWithoutStart(b): void {
           b.stop();
@@ -151,7 +151,7 @@ Deno.test({
 Deno.test({
   name: "Bench with stop before start should throw",
   fn: async function () {
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         bench(function benchStopBeforeStart(b): void {
           b.stop();

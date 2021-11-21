@@ -1,6 +1,5 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
-
-import { Predicate } from "./types.ts";
+// This module is browser compatible.
 
 /**
  * Returns a new record with all entries of the given record except the ones that do not match the given predicate
@@ -8,7 +7,8 @@ import { Predicate } from "./types.ts";
  * Example:
  *
  * ```ts
- * import { filterEntries } from "./filter_entries.ts";
+ * import { filterEntries } from "https://deno.land/std@$STD_VERSION/collections/mod.ts";
+ * import { assertEquals } from "https://deno.land/std@$STD_VERSION/testing/asserts.ts";
  *
  * const menu = {
  *     'Salad': 11,
@@ -19,14 +19,14 @@ import { Predicate } from "./types.ts";
  *     ([ item, price ]) => item !== 'Pasta' && price < 10,
  * )
  *
- * console.assert(myOptions === {
+ * assertEquals(myOptions, {
  *     'Soup': 8,
  * })
  * ```
  */
 export function filterEntries<T>(
-  record: Record<string, T>,
-  predicate: Predicate<[string, T]>,
+  record: Readonly<Record<string, T>>,
+  predicate: (entry: [string, T]) => boolean,
 ): Record<string, T> {
   const ret: Record<string, T> = {};
   const entries = Object.entries(record);

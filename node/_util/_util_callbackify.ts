@@ -22,6 +22,9 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // These are simplified versions of the "real" errors in Node.
+
+import { nextTick } from "../_next_tick.ts";
+
 class NodeFalsyValueRejectionError extends Error {
   public reason: unknown;
   public code = "ERR_FALSY_VALUE_REJECTION";
@@ -84,8 +87,9 @@ function callbackify<Arg1T, Arg2T, Arg3T, Arg4T, Arg5T, ResultT>(
   callback: Callback<ResultT>,
 ) => void;
 
-// deno-lint-ignore no-explicit-any
-function callbackify(original: any): any {
+function callbackify<ResultT>(
+  original: (...args: unknown[]) => PromiseLike<ResultT>,
+): (...args: unknown[]) => void {
   if (typeof original !== "function") {
     throw new NodeInvalidArgTypeError('"original"');
   }
@@ -100,11 +104,11 @@ function callbackify(original: any): any {
     };
     original.apply(this, args).then(
       (ret: unknown) => {
-        queueMicrotask(cb.bind(this, null, ret));
+        nextTick(cb.bind(this, null, ret));
       },
       (rej: unknown) => {
         rej = rej || new NodeFalsyValueRejectionError(rej);
-        queueMicrotask(cb.bind(this, rej));
+        nextTick(cb.bind(this, rej));
       },
     );
   };
