@@ -13,6 +13,8 @@ import {
   white,
 } from "../fmt/colors.ts";
 import { diff, DiffResult, diffstr, DiffType } from "./_diff.ts";
+import { dirname, fromFileUrl } from "../path/mod.ts";
+import { writeAll } from "../io/util.ts";
 
 const CAN_NOT_DISPLAY = "[Cannot display]";
 
@@ -774,6 +776,118 @@ export async function assertRejects<E extends Error = Error>(
 }
 
 /**
+ * Asserts that compiling the given TypeScript code using the
+ * given location produces the expected errors for each of the
+ * preceeding blocks of code.
+ */
+export async function _assertTypescriptErrors(
+  meta: ImportMeta,
+  body: <T>(
+    ts: (
+      codeChunks: TemplateStringsArray,
+      ...errorChunks: Array<string | null | undefined>
+    ) => T,
+  ) => T,
+) {
+  const cwd = dirname(fromFileUrl(meta.url));
+  const env = {
+    "NO_COLOR": "",
+  };
+  const cmd = [
+    Deno.execPath(),
+    "run",
+    "--quiet",
+    "-",
+  ];
+
+  const typescriptDiagnosticPattern =
+    /^(?:error: )?(?<error>TS\d+[^\n]+?)\n(?<excerpt>[^\n]+?)\n(?<arrow>[ \^\~]+)\n +at (?<path>[^\n]+?):(?<line>\d+):(?<column>\d+)$/gm;
+
+  const matchDiagnostics = (tscOutput: string) =>
+    [
+      ...tscOutput
+        .replace(/^error: /m, "")
+        .matchAll(typescriptDiagnosticPattern),
+    ].map((d) => ({
+      error: d.groups!.error,
+      path: d.groups!.path,
+      line: Number(d.groups!.line),
+    }));
+
+  const normalizeExpectedDiagnostics = (expectedChunk: string) =>
+    expectedChunk.split(/\n+/g).map((s) => s.trim()).filter((s) =>
+      s && !s.startsWith("//")
+    );
+
+  const inputChunks = body((codeChunks, ...errorChunks) =>
+    codeChunks.map((code, i) => {
+      code = code.replaceAll(/^([ \t]*\n)+/g, "");
+      code = code.replaceAll(/(\n[ \t]*)+$/g, "");
+      code = code.replaceAll(/^[ \t]+$/g, "");
+      code = code + "\n";
+      return ({
+        lines: [...code.matchAll(/\n/g)].length,
+        code,
+        expectedErrors: normalizeExpectedDiagnostics(errorChunks[i] ?? ""),
+        actualErrors: [] as string[],
+      });
+    })
+  );
+
+  const inputCode = inputChunks.map((c) => c.code).join("");
+
+  const process = Deno.run({
+    cmd,
+    cwd,
+    env,
+    stdout: "inherit",
+    stderr: "piped",
+    stdin: "piped",
+  });
+
+  await writeAll(process.stdin, new TextEncoder().encode(inputCode));
+  process.stdin.close();
+
+  const output = new TextDecoder().decode(await process.stderrOutput());
+  process.close();
+
+  const actualErrors = matchDiagnostics(output);
+
+  for (const error of actualErrors) {
+    if (!error.path.endsWith("$deno$stdin.ts")) {
+      fail(
+        `got unexpected type error, from outside of test input file: ${
+          JSON.stringify(error, null, 2)
+        }`,
+      );
+    }
+
+    let chunkIndex = 0;
+    let chunk = inputChunks[chunkIndex];
+    let lineAfterChunk = 1 + chunk.lines;
+    while (
+      error.line >= lineAfterChunk && chunkIndex + 1 < inputChunks.length
+    ) {
+      chunkIndex++;
+      chunk = inputChunks[chunkIndex];
+      lineAfterChunk += chunk.lines;
+    }
+
+    chunk.actualErrors.push(error.error);
+  }
+
+  const actualErrorsString = inputChunks
+    .map((c) => c.code + c.actualErrors.join("\n"))
+    .join("\n").trimEnd() + "\n";
+
+  const expectedErrorsString = inputChunks
+    .map((c) => c.code + c.expectedErrors.join("\n"))
+    .join("\n").trimEnd() + "\n";
+
+  assertEquals(actualErrorsString, expectedErrorsString);
+}
+
+/*
  * Executes a function which returns a promise, expecting it to throw or reject.
  * If it does not, then it throws.  An error class and a string that should be
  * included in the error message can also be asserted.
