@@ -824,7 +824,7 @@ export async function _assertTypescriptErrors(
       lines: [...code.matchAll(/\n/g)].length + 1,
       code: `${code}\n`,
       expectedErrors: normalizeExpectedDiagnostics(errorChunks[i] ?? ""),
-      actualErrors: [],
+      actualErrors: [] as string[],
     }))
   );
 
@@ -855,16 +855,30 @@ export async function _assertTypescriptErrors(
         }`,
       );
     }
+
+    let chunkIndex = 0;
+    let chunk = inputChunks[chunkIndex];
+    let lineAfterChunk = 1 + chunk.lines;
+    while (
+      error.line >= lineAfterChunk && chunkIndex + 1 < inputChunks.length
+    ) {
+      chunkIndex++;
+      chunk = inputChunks[chunkIndex];
+      lineAfterChunk += chunk.lines;
+    }
+
+    chunk.actualErrors.push(error.error);
   }
 
-  const actualErrorStrings = actualErrors.map((d) => d.error).join("\n");
-
-  console.log(actualErrors);
+  const actualErrorsString = inputChunks
+    .map((c, i) => c.code + "\n" + c.actualErrors.join("\n")).filter(Boolean)
+    .join("\n");
 
   const expectedErrorsString = inputChunks
-    .map((c) => c.expectedErrors.join("\n")).join("\n\n");
+    .map((c, i) => c.code + "\n" + c.expectedErrors.join("\n")).filter(Boolean)
+    .join("\n");
 
-  assertEquals(actualErrorStrings, expectedErrorsString);
+  assertEquals(actualErrorsString, expectedErrorsString);
 }
 
 /*

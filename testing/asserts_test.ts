@@ -1151,6 +1151,7 @@ Deno.test("assertTypescriptErrors/successes", async () => {
       const x = 3;
     }${`
       TS2451 [ERROR]: Cannot redeclare block-scoped variable 'x'.
+      TS2451 [ERROR]: Cannot redeclare block-scoped variable 'x'.
     `}
 
     export function f() { return 1; }
