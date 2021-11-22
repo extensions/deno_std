@@ -14,7 +14,7 @@ import {
 } from "../fmt/colors.ts";
 import { diff, DiffResult, diffstr, DiffType } from "./_diff.ts";
 import { dirname, fromFileUrl } from "../path/mod.ts";
-import { writeAll } from "../streams/conversion.ts";
+import { writeAll } from "../io/util.ts";
 
 const CAN_NOT_DISPLAY = "[Cannot display]";
 
