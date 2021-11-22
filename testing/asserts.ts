@@ -14,7 +14,7 @@ import {
 } from "../fmt/colors.ts";
 import { diff, DiffResult, diffstr, DiffType } from "./_diff.ts";
 import { dirname, fromFileUrl } from "../path/mod.ts";
-import { writeAll } from "../io/util.ts";
+import { writeAll } from "../streams/conversion.ts";
 
 const CAN_NOT_DISPLAY = "[Cannot display]";
 
@@ -820,12 +820,18 @@ export async function _assertTypescriptErrors(
     );
 
   const inputChunks = body((codeChunks, ...errorChunks) =>
-    codeChunks.map((code, i) => ({
-      lines: [...code.matchAll(/\n/g)].length + 1,
-      code: `${code}\n`,
-      expectedErrors: normalizeExpectedDiagnostics(errorChunks[i] ?? ""),
-      actualErrors: [] as string[],
-    }))
+    codeChunks.map((code, i) => {
+      code = code.replaceAll(/^([ \t]*\n)+/g, "");
+      code = code.replaceAll(/(\n[ \t]*)+$/g, "");
+      code = code.replaceAll(/^[ \t]+$/g, "");
+      code = code + "\n";
+      return ({
+        lines: [...code.matchAll(/\n/g)].length,
+        code,
+        expectedErrors: normalizeExpectedDiagnostics(errorChunks[i] ?? ""),
+        actualErrors: [] as string[],
+      });
+    })
   );
 
   const inputCode = inputChunks.map((c) => c.code).join("");
@@ -871,12 +877,12 @@ export async function _assertTypescriptErrors(
   }
 
   const actualErrorsString = inputChunks
-    .map((c, i) => c.code + "\n" + c.actualErrors.join("\n")).filter(Boolean)
-    .join("\n");
+    .map((c) => c.code + c.actualErrors.join("\n"))
+    .join("\n").trimEnd() + "\n";
 
   const expectedErrorsString = inputChunks
-    .map((c, i) => c.code + "\n" + c.expectedErrors.join("\n")).filter(Boolean)
-    .join("\n");
+    .map((c) => c.code + c.expectedErrors.join("\n"))
+    .join("\n").trimEnd() + "\n";
 
   assertEquals(actualErrorsString, expectedErrorsString);
 }
