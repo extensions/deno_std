@@ -4,13 +4,15 @@ import { _assertTypescriptErrors } from "../../../x/deno_std/testing/asserts.ts"
 
 const moduleDir = dirname(fromFileUrl(import.meta.url));
 
+type x = (2 & any) extends 2 ? "t" : "f";
+
 Deno.test(
   "assertStatic/TypeEquals/success",
   () => {
-    assertStatic<TypeEquals<2, 2 & number>>();
+    assertStatic<TypeEquals<any, 2>>();
     assertStatic<TypeEquals<2 & (number | string), 2>>();
     const x = "hello";
-    assertStatic<TypeEquals<typeof x, "hello">>();
+    assertStatic<TypeEquals<typeof x, "nope">>();
     assertStatic<TypeEquals<"hello", "hello">>();
   },
 );
@@ -19,7 +21,7 @@ Deno.test(
   "assertStatic/TypeEquals/failure",
   async () => {
     await _assertTypescriptErrors(import.meta, (ts) =>
-      ts /* ts */`
+      ts`
       import { assertStatic, TypeEquals } from "./asserts_static.ts";
 
       assertStatic<TypeEquals<2, 2 & number>>();

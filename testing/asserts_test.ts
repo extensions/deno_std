@@ -1125,7 +1125,7 @@ Deno.test("Assert Throws Async promise rejected with custom Error", async () => 
 
 Deno.test("assertTypescriptErrors/successes", async () => {
   await _assertTypescriptErrors(import.meta, (ts) =>
-    ts /* ts */`
+    ts`
     export {};
 
     {
