@@ -7,6 +7,11 @@ Deno.test(
     assertStatic<TypeEquals<unknown, unknown>>();
     assertStatic<TypeEquals<any, any>>();
     assertStatic<TypeEquals<number, number>>();
+
+    // XXX: problem!
+    // this should be an error, but it isn't?
+    // maybe we have to do a deep replace-all of `any` with something else
+    assertStatic<TypeEquals<[number, any], [number, number]>>();
   },
 );
 
@@ -30,10 +35,10 @@ Deno.test(
       ${null}
 
       assertStatic<TypeEquals<any, unknown>>();
-      ${`TS2344 [ERROR]: Type 'Failure<["Actual type was any, but expected was not.", { Expected: unknown; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+      ${`TS2344 [ERROR]: Type 'Failure<["Actual type was any, but expected type was not.", { Actual: any; Expected: unknown; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
 
       assertStatic<TypeEquals<unknown, any>>();
-      ${`TS2344 [ERROR]: Type 'Failure<["Expected type was any, but actual was not.", { Actual: unknown; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+      ${`TS2344 [ERROR]: Type 'Failure<["Expected type was any, but actual type was not.", { Actual: unknown; Expected: any; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
       assertStatic<TypeEquals<number, unknown>>();
 
       ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the actual type extends the expected type.", { Actual: number; Expected: unknown; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
@@ -42,10 +47,10 @@ Deno.test(
       ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the expected type extends the actual type.", { Actual: unknown; Expected: number; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
 
       assertStatic<TypeEquals<any, number>>();
-      ${`TS2344 [ERROR]: Type 'Failure<["Actual type was any, but expected was not.", { Expected: number; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+      ${`TS2344 [ERROR]: Type 'Failure<["Actual type was any, but expected type was not.", { Actual: any; Expected: number; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
 
       assertStatic<TypeEquals<number, any>>();
-      ${`TS2344 [ERROR]: Type 'Failure<["Expected type was any, but actual was not.", { Actual: number; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+      ${`TS2344 [ERROR]: Type 'Failure<["Expected type was any, but actual type was not.", { Actual: number; Expected: any; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
 
       assertStatic<TypeEquals<2, number>>();
       ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the actual type extends the expected type.", { Actual: 2; Expected: number; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
@@ -67,6 +72,41 @@ Deno.test(
 
       assertStatic<TypeEquals<2, 2 | "three">>();
       ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the actual type extends the expected type.", { Actual: 2; Expected: 2 | "three"; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+
+      assertStatic<TypeEquals<[number, unknown], [number, unknown]>>();
+      ${null}
+
+      assertStatic<TypeEquals<[number, unknown], [number, number]>>();
+      ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the expected type extends the actual type.", { Actual: [number, unknown]; Expected: [number, number]; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+
+      assertStatic<TypeEquals<[number, unknown], [unknown, unknown]>>();
+      ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the actual type extends the expected type.", { Actual: [number, unknown]; Expected: [unknown, unknown]; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+
+      assertStatic<TypeEquals<[number, unknown], [number]>>();
+      ${` TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but they were unrelated.", { Actual: [number, unknown]; Expected: [number]; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+
+      assertStatic<TypeEquals<[number, unknown], [unknown]>>();
+      ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but they were unrelated.", { Actual: [number, unknown]; Expected: [unknown]; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+
+      assertStatic<
+        TypeEquals<{ a: "one"; b: 2 }, { a: "one"; b: 2 }>
+      >();
+      ${null}
+
+      assertStatic<
+        TypeEquals<{ a: number; b: unknown }, { a: number }>
+      >();
+      ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the actual type extends the expected type.", { Actual: { a: number; b: unknown; }; Expected: { a: number; }; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+
+      assertStatic<
+        TypeEquals<{ a: number; b: unknown }, { a: number; b: number }>
+      >();
+      ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the expected type extends the actual type.", { Actual: { a: number; b: unknown; }; Expected: { a: number; b: number; }; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
+
+      assertStatic<
+        TypeEquals<{ a: number; b: unknown }, { a: unknown; b: unknown }>
+      >();
+      ${`XXX: problem! this should pass!`}
   `);
   },
 );

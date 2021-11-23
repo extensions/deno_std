@@ -4,16 +4,17 @@ export type Failure<Message> = [Message];
 export const assertStatic = <Assertion extends Pass>() => undefined;
 export type AssertStatic<Assertion extends Pass> = undefined;
 
-// Unique sentinel types used for internal type comparisons.
+// Unique sentinel types used for type comparisons.
+
 const Aleph = Symbol();
 type Aleph = typeof Aleph;
 const Omicron = Symbol();
 type Omicron = typeof Omicron;
 
-// use on both sides of an `extends` to make it an exact comparison
+// Use on both sides of an `extends` to make it an exact comparison
 type ExactType<T> = (_: T) => T;
 
-// use it on both sides of an `extends` to ensure it produces a single result
+// Use on both sides of an `extends` to ensure it produces a single result
 // for union types, instead of distributing across them.
 type DontDistribute<T> = () => T;
 
@@ -28,8 +29,8 @@ export type TypeEquals<Actual, Expected> =
       (
         Failure<
           [
-            "Actual type was any, but expected was not.",
-            { Expected: Expected },
+            "Actual type was any, but expected type was not.",
+            { Actual: Actual; Expected: Expected },
           ]
         >
       )
@@ -39,7 +40,10 @@ export type TypeEquals<Actual, Expected> =
       // if expected is any
       ExactType<Omicron> extends ExactType<Expected & Aleph> ? (
         Failure<
-          ["Expected type was any, but actual was not.", { Actual: Actual }]
+          [
+            "Expected type was any, but actual type was not.",
+            { Actual: Actual; Expected: Expected },
+          ]
         >
       )
         : // else (expected is not any)
@@ -54,8 +58,8 @@ export type TypeEquals<Actual, Expected> =
               (
                 Failure<
                   [
-                    "Actual type was never, but expected was not.",
-                    { Expected: Expected },
+                    "Actual type was never, but expected type was not.",
+                    { Actual: Actual; Expected: Expected },
                   ]
                 >
               )
@@ -66,8 +70,8 @@ export type TypeEquals<Actual, Expected> =
               ExactType<Aleph> extends ExactType<Aleph | Expected> ? (
                 Failure<
                   [
-                    "Expected type was never, but actual was not.",
-                    { Actual: Actual },
+                    "Expected type was never, but actual type was not.",
+                    { Actual: Actual; Expected: Expected },
                   ]
                 >
               )
@@ -80,7 +84,10 @@ export type TypeEquals<Actual, Expected> =
                     : (
                       Failure<[
                         DontDistribute<Expected> extends DontDistribute<Actual>
-                          ? "Expected types to be identical, but the expected type extends the actual type."
+                          ? DontDistribute<Actual> extends
+                            DontDistribute<Expected>
+                            ? "Expected types to be identical, but DOES NOT COMPUTE?"
+                          : "Expected types to be identical, but the expected type extends the actual type."
                           : DontDistribute<Actual> extends
                             DontDistribute<Expected>
                             ? "Expected types to be identical, but the actual type extends the expected type."
