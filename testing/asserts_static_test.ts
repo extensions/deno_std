@@ -11,6 +11,7 @@ Deno.test(
     // XXX: problem!
     // this should be an error, but it isn't?
     // maybe we have to do a deep replace-all of `any` with something else
+    // https://github.com/Shopify/quilt/blob/@shopify/useful-types@2.4.0/packages/useful-types/src/types.ts#L26
     assertStatic<TypeEquals<[number, any], [number, number]>>();
   },
 );
