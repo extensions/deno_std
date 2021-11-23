@@ -1,9 +1,5 @@
-import { DeepReplaceAny } from "../../../x/deno_std/testing/asserts_static.ts";
 import { _assertTypescriptErrors } from "./asserts.ts";
 import { assertStatic, TypeEquals } from "./asserts_static.ts";
-
-type t = DeepReplaceAny<[number, { hello: any }]>;
-
 Deno.test(
   "assertStatic/TypeEquals/success",
   () => {
@@ -19,10 +15,26 @@ Deno.test(
       TypeEquals<[{ f(_: number): void }], [{ f(_: number): void }]>
     >();
     assertStatic<
-      TypeEquals<[{ f(): number }], [{ f(): number }]>
+      TypeEquals<[{ f(): number }], unknown & [{ f(): number }]>
     >();
     assertStatic<
       TypeEquals<[{ f?(): number }], [{ f?(): number }]>
+    >();
+
+    assertStatic<
+      TypeEquals<{}, {}>
+    >();
+
+    assertStatic<
+      TypeEquals<{ a: 1 }, { a: 1 }>
+    >();
+
+    assertStatic<
+      TypeEquals<{ new (): number }, {}>
+    >();
+
+    assertStatic<
+      TypeEquals<{ (): number; a: 1 }, { a: 1 }>
     >();
   },
 );
@@ -128,6 +140,9 @@ Deno.test(
       ${null}
 
       assertStatic<TypeEquals<PromiseLike<number>, Promise<number>>>();
+      ${null}
+
+      assertStatic<TypeEquals<{ a: 1; b: 2 }, { a: 1 }>>();
       ${null}
   `);
   },
