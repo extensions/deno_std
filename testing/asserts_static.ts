@@ -14,6 +14,8 @@ type Primitive =
   | null
   | void;
 
+////////////////////// tuple types are weird
+
 // Simplify a type, to make them easier to compare.
 type DeepSimplify<T> = DeepSimplify_1_Any<T>;
 enum Aleph {
@@ -67,16 +69,17 @@ type DeepSimplify_5_Constructable<T> = T extends
   : DeepSimplify_6_Array<T>;
 
 // Extract array type.
-const Array: unique symbol = Symbol("Array");
-type Array = typeof Array;
+const Array_: unique symbol = Symbol("Array");
+type Array_ = typeof Array_;
 type DeepSimplify_6_Array<T> = T extends (infer I)[]
-  ? { [Array]: DeepSimplify<I> } & DeepSimplify_7_Object<T>
+  ? { [Array_]: DeepSimplify<I> } & DeepSimplify_7_Object<T>
   : DeepSimplify_7_Object<T>;
 
 // Recur through arrays and objects.
-type DeepSimplify_7_Object<T> = {
-  [P in keyof T]: DeepSimplify<T[P]>;
-};
+type DeepSimplify_7_Object<T> = T extends Record<infer P, infer V> ? {
+  [p in P]: DeepSimplify<T[p]>;
+}
+  : {};
 
 export type TypeEquals<Actual, Expected> = TypeEqualsHelper<
   Actual,
@@ -106,8 +109,8 @@ type TypeEqualsHelper<
           ? "Expected types to be identical, but the actual type extends the expected type."
         : "Expected types to be identical, but they were unrelated.",
       {
-        Actual: Actual;
-        Expected: Expected;
+        // Actual: Actual;
+        // Expected: Expected;
         ActualSimplified: ActualSimplified;
         ExpectedSimplified: ExpectedSimplified;
       },
