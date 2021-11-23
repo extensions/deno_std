@@ -8,6 +8,7 @@ Deno.test(
     assertStatic<TypeEquals<number, number>>();
     assertStatic<TypeEquals<number, number | 3>>();
     assertStatic<TypeEquals<number, number & (number | string)>>();
+    assertStatic<TypeEquals<{ new (): void }, { new (): void }>>();
     assertStatic<TypeEquals<Promise<number>, Promise<number>>>();
     assertStatic<TypeEquals<PromiseLike<number>, PromiseLike<number>>>();
     assertStatic<TypeEquals<[number, any], [number, any]>>();
@@ -30,12 +31,61 @@ Deno.test(
     >();
 
     assertStatic<
-      TypeEquals<{ new (): number }, {}>
+      TypeEquals<{ (b: number): number }, { (a: number): number }>
+    >();
+
+    // expected errors:
+
+    assertStatic<
+      TypeEquals<
+        { (a: number, b?: number): number },
+        { (a: number): number }
+      >
     >();
 
     assertStatic<
-      TypeEquals<{ (): number; a: 1 }, { a: 1 }>
+      TypeEquals<
+        { (a: number, b: number): number },
+        { (a: number, ...args: number[]): number }
+      >
     >();
+
+    assertStatic<TypeEquals<any[], number[]>>();
+
+    assertStatic<TypeEquals<[any[]], [number[]]>>();
+
+    assertStatic<TypeEquals<[...any[]], [...number[]]>>();
+
+    assertStatic<TypeEquals<[number, ...any[]], [number, ...number[]]>>();
+
+    assertStatic<
+      TypeEquals<
+        { (a: number, ...b: number[]): number },
+        { (a: number): void }
+      >
+    >();
+
+    assertStatic<
+      TypeEquals<{ (): number; a: 1 }, { (): number; a: 2 }>
+    >();
+
+    assertStatic<
+      TypeEquals<{ (): number }, { (a: number): number }>
+    >();
+
+    assertStatic<
+      TypeEquals<{ (): number }, { (): number; b: 2 }>
+    >();
+
+    assertStatic<
+      TypeEquals<{ (): number }, { (a: number): number }>
+    >();
+
+    assertStatic<
+      TypeEquals<{ new (x: number): void }, { new (x: string): void }>
+    >();
+
+    assertStatic<TypeEquals<number, number | string>>();
   },
 );
 
