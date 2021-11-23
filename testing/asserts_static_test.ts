@@ -10,6 +10,7 @@ Deno.test(
   "assertStatic/TypeEquals/success",
   () => {
     assertStatic<TypeEquals<any, 2>>();
+    assertStatic<TypeEquals<2, any>>();
     assertStatic<TypeEquals<2 & (number | string), 2>>();
     const x = "hello";
     assertStatic<TypeEquals<typeof x, "nope">>();
