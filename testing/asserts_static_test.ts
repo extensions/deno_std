@@ -1,5 +1,8 @@
+import { DeepReplaceAny } from "../../../x/deno_std/testing/asserts_static.ts";
 import { _assertTypescriptErrors } from "./asserts.ts";
 import { assertStatic, TypeEquals } from "./asserts_static.ts";
+
+type t = DeepReplaceAny<[number, { hello: any }]>;
 
 Deno.test(
   "assertStatic/TypeEquals/success",
@@ -7,12 +10,20 @@ Deno.test(
     assertStatic<TypeEquals<unknown, unknown>>();
     assertStatic<TypeEquals<any, any>>();
     assertStatic<TypeEquals<number, number>>();
-
-    // XXX: problem!
-    // this should be an error, but it isn't?
-    // maybe we have to do a deep replace-all of `any` with something else
-    // https://github.com/Shopify/quilt/blob/@shopify/useful-types@2.4.0/packages/useful-types/src/types.ts#L26
-    assertStatic<TypeEquals<[number, any], [number, number]>>();
+    assertStatic<TypeEquals<number, number | 3>>();
+    assertStatic<TypeEquals<number, number & (number | string)>>();
+    assertStatic<TypeEquals<Promise<number>, Promise<number>>>();
+    assertStatic<TypeEquals<PromiseLike<number>, PromiseLike<number>>>();
+    assertStatic<TypeEquals<[number, any], [number, any]>>();
+    assertStatic<
+      TypeEquals<[{ f(_: number): void }], [{ f(_: number): void }]>
+    >();
+    assertStatic<
+      TypeEquals<[{ f(): number }], [{ f(): number }]>
+    >();
+    assertStatic<
+      TypeEquals<[{ f?(): number }], [{ f?(): number }]>
+    >();
   },
 );
 
@@ -89,25 +100,35 @@ Deno.test(
       assertStatic<TypeEquals<[number, unknown], [unknown]>>();
       ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but they were unrelated.", { Actual: [number, unknown]; Expected: [unknown]; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
 
-      assertStatic<
-        TypeEquals<{ a: "one"; b: 2 }, { a: "one"; b: 2 }>
-      >();
+      assertStatic<TypeEquals<{ a: "one"; b: 2 }, { a: "one"; b: 2 }>>();
       ${null}
 
-      assertStatic<
-        TypeEquals<{ a: number; b: unknown }, { a: number }>
-      >();
+      assertStatic<TypeEquals<{ a: number; b: unknown }, { a: number }>>();
       ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the actual type extends the expected type.", { Actual: { a: number; b: unknown; }; Expected: { a: number; }; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
 
-      assertStatic<
-        TypeEquals<{ a: number; b: unknown }, { a: number; b: number }>
-      >();
+      assertStatic<TypeEquals<{ a: number; b: unknown }, { a: number; b: number }>>();
       ${`TS2344 [ERROR]: Type 'Failure<["Expected types to be identical, but the expected type extends the actual type.", { Actual: { a: number; b: unknown; }; Expected: { a: number; b: number; }; }]>' does not satisfy the constraint '"static assertions must pass"'.`}
 
-      assertStatic<
-        TypeEquals<{ a: number; b: unknown }, { a: unknown; b: unknown }>
-      >();
-      ${`XXX: problem! this should pass!`}
+      assertStatic<TypeEquals<{ a: unknown; b: unknown }, { a: unknown; b: unknown }>>();
+      ${null}
+
+      assertStatic<TypeEquals<[number, any], [number, number]>>();
+      ${null}
+
+      assertStatic<TypeEquals<[{ f(_: any): void }], [{ f(_: number): void }]>>();
+      ${null}
+
+      assertStatic<TypeEquals<[{ f(_: number): any }], [{ f(_: number): void }]>>();
+      ${null}
+
+      assertStatic<TypeEquals<[{ f(): any }], [{ f(): number }]>>();
+      ${null}
+
+      assertStatic<TypeEquals<[{ f?(): number }], [{ f(): number }]>>();
+      ${null}
+
+      assertStatic<TypeEquals<PromiseLike<number>, Promise<number>>>();
+      ${null}
   `);
   },
 );
