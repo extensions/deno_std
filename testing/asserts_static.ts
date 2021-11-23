@@ -10,147 +10,85 @@ type Aleph = typeof Aleph;
 const Omicron = Symbol();
 type Omicron = typeof Omicron;
 
-type Contravariant<T> = (contravariant: T) => null;
-type Covariant<T> = (covariant: null) => T;
-type Invariant<T> = (invariant: T) => T;
+// use on both sides of an `extends` to make it an exact comparison
+type ExactType<T> = (_: T) => T;
+
+// use it on both sides of an `extends` to ensure it produces a single result
+// for union types, instead of distributing across them.
+type DontDistribute<T> = () => T;
 
 export type TypeEquals<Actual, Expected> =
-  // if Actual is any
-  Invariant<Omicron> extends Invariant<Aleph & Actual> ? (
-    // if Expected is any
-    Invariant<Omicron> extends Invariant<Aleph & Expected> ? (
+  // if actual is any
+  ExactType<Omicron> extends ExactType<Aleph & Actual> ? (
+    // if expected is any
+    ExactType<Omicron> extends ExactType<Aleph & Expected> ? (
       Pass
     )
-      // else (Expected is not any)
-      : (
+      : // else (expected is not any)
+      (
         Failure<
           [
-            "Actual type was any, but Expected was not.",
-            { Actual: Actual; Expected: Expected },
+            "Actual type was any, but expected was not.",
+            { Expected: Expected },
           ]
         >
       )
   )
-    // else (Actual is not any)
-    : (
-      // if Expected is any
-      Invariant<Omicron> extends Invariant<Expected & Aleph> ? (
+    : // else (actual is not any)
+    (
+      // if expected is any
+      ExactType<Omicron> extends ExactType<Expected & Aleph> ? (
         Failure<
-          ["Expected type was any, but Actual was not.", { Actual: Actual }]
+          ["Expected type was any, but actual was not.", { Actual: Actual }]
         >
       )
-        // else (Expected is not Any)
-        : (
-          // if Actual is never
-          Invariant<Aleph> extends Invariant<Aleph | Actual> ? (
-            // if Expected is never
-            Invariant<Aleph> extends Invariant<Aleph | Expected> ? (
+        : // else (expected is not any)
+        (
+          // if actual is never
+          ExactType<Aleph> extends ExactType<Aleph | Actual> ? (
+            // if expected is never
+            ExactType<Aleph> extends ExactType<Aleph | Expected> ? (
               Pass
-            ) : (
-              Failure<["Actual type was never, but expected was not.", {Expected: Expected}]>
             )
-          )
-          // else (Actual is not never)
-              : (
-                // if Expected is never
-
-              Invariant<Aleph> extends Invariant<Aleph | Expected> ? (
-                Failure<["Expected type was never, but actual was not.", {Actual: Actual}]>
+              : // else (expected is not never)
+              (
+                Failure<
+                  [
+                    "Actual type was never, but expected was not.",
+                    { Expected: Expected },
+                  ]
+                >
               )
-
-
+          )
+            : // else (actual is not never)
+            (
+              // if expected is never
+              ExactType<Aleph> extends ExactType<Aleph | Expected> ? (
+                Failure<
+                  [
+                    "Expected type was never, but actual was not.",
+                    { Actual: Actual },
+                  ]
+                >
+              )
+                : // else (expected is not never)
+                (
+                  // if expected and actual are the same type
+                  ExactType<Expected> extends ExactType<Actual> ? (
+                    Pass
+                  )
+                    : (
+                      Failure<[
+                        DontDistribute<Expected> extends DontDistribute<Actual>
+                          ? "Expected types to be identical, but the expected type extends the actual type."
+                          : DontDistribute<Actual> extends
+                            DontDistribute<Expected>
+                            ? "Expected types to be identical, but the actual type extends the expected type."
+                          : "Expected types to be identical, but they were unrelated.",
+                        { Actual: Actual; Expected: Expected },
+                      ]>
+                    )
+                )
+            )
         )
     );
-
-// export type _TypeEquals<Actual, Expected> = If<
-//   Equals<Actual, Expected>,
-//   Pass,
-//   Failure<[
-//     "Expected Actual type to exactly match Expected type ",
-//     Expected,
-//     " but Actual type was ",
-//     Actual,
-//     ". ",
-//     TypeRelation<Actual, Expected>,
-//   ]>
-// >;
-
-// // To avoid confusion with the typical boolean types, we declare our own unique
-// // boolean type for our type comparison results.
-// export type Bool = True | False;
-// const True = Symbol();
-// export type True = typeof True;
-// const False = Symbol();
-// export type False = typeof False;
-
-// // Wrap the built-in `extends` operator as a Bool-returning type function.
-// export type Extends<Actual, Expected> = Actual extends Expected ? True : False;
-
-// // `never` is the only type that should have no effect when unioned
-// export type IsNever<Type> = Extends<[Type | Aleph], [Aleph]>;
-// // Types represent the four possible relationships we model between two types.
-// //
-// // The string values for each of these types are used in diagnostic messages.
-// export type Relation =
-//   | Identical<string>
-//   | Incompatible
-//   | ActualIsSubsetOfExpected
-//   | ActualIsSupersetOfExpected;
-// // Identical types are mutually-assignable, and both or neither are `any`.
-// export type Identical<Details extends string> =
-//   `Actual and Expected types are identical (${Details}).`;
-// // Actual is a strict superset of Expected, which means that `Expected extends Actual`
-// // with additional constraints, and values of type Expected are assignable to
-// // variables/arguments of type Actual but not the opposite.
-// export type ActualIsSupersetOfExpected =
-//   "Actual type is a strict superset of Expected type.";
-// // Actual is a strict subset of Expected, which means that `Actual extends Expected`
-// // with additional constraints, and values of type Actual are assignable to
-// // variables/arguments of type Expected but not the opposite.
-// export type ActualIsSubsetOfExpected = "Actual type is a strict subset of Expected type.";
-// // The types are incompatible, and mutally-unassignable, or only one is `any`.
-// export type Incompatible = "Actual type is incompatible with Expected type.";
-
-// export type TypeRelation<Actual, Expected> =
-//   // `any` is incoherent with the rest of the type system, so we for simplicity
-//   // define it as  incompatible with/unrelated to every type but itself.
-//   If<
-//     IsAny<Actual>,
-//     If<
-//       IsAny<Expected>,
-//       Identical<"both are any">,
-//       Incompatible
-//     >,
-//     If<
-//       IsAny<Expected>,
-//       Incompatible,
-//       // handle nevers
-//       If<
-//         IsNever<Actual>,
-//         If<
-//           IsNever<Expected>,
-//           Identical<"both are never">,
-//           ActualIsSubsetOfExpected
-//         >,
-//         If<
-//           IsNever<Expected>,
-//           ActualIsSupersetOfExpected,
-//           // handle real relationships
-//           If<
-//             Extends<[Expected], [Actual]>,
-//             If<
-//               Extends<[Actual], [Expected]>,
-//               Identical<"their types are mutually-assignable">,
-//               ActualIsSupersetOfExpected
-//             >,
-//             If<
-//               Extends<[Actual], [Expected]>,
-//               ActualIsSubsetOfExpected,
-//               // types are mutually incompatible
-//               Incompatible
-//             >
-//           >
-//         >
-//       >
-//     >
-//   >;
