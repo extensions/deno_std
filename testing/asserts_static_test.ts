@@ -89,6 +89,17 @@ Deno.test(
   },
 );
 
+// type t1 = (a: number, ...b: number[]) => number;
+// type t2 = (a: number, b: number) => number;
+
+// let t1_a = (undefined as unknown) as t1;
+// let t2_a = (undefined as unknown) as t2;
+
+// // Mutually assignable!
+// // Even with strict
+// let t1_b: t1 = t2_a;
+// let t2_b: t2 = t1_a;
+
 Deno.test(
   "assertStatic/TypeEquals/failure",
   async () => {

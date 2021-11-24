@@ -1,8 +1,111 @@
+/** type returned by successful static assertions */
 export type Pass = "static assertions must pass";
+/** type returned by failed static assertions */
 export type Failure<Message> = [Message];
 
+/** static assertion as a no-op function call. */
 export const assertStatic = <Assertion extends Pass>() => undefined;
+/** static assertion as a dummy undefined type. */
 export type AssertStatic<Assertion extends Pass> = undefined;
+
+/**
+ * Asserts that two types are mutually-assignable without a TypeScript type error.
+ *
+ * This doesn't neccessarily mean that the types are entirely identical. In the
+ * following example, these function signatures are meaningfully different, but
+ * TypeScript allows values of one to be assigned to variable of the other type.
+ * This assertion will also consider them to be "equal", and won't fail. The
+ * `any` type is also consider "equal" to any other type.
+ *
+ * ```ts
+ * type t1 = (a: number, ...b: number[]) => number;
+ * type t2 = (a: number, b: number) => number;
+ *
+ * let t1_a: t1 = (a: number, ...b: number[]) => a + b.length;
+ * let t2_a: t2 = (a:number, b: number) => a + b;
+ *
+ * let t1_b: t1 = t2_a;
+ * let t2_b: t2 = t1_a;
+ * ```
+ */
+export type TypeEquals<Actual, Expected> = TypeEqualsHelper<
+  Actual,
+  Actual,
+  Expected,
+  Expected
+>;
+
+enum UniqueTypeA {
+  _ = "",
+}
+enum UniqueTypeB {
+  _ = "",
+}
+
+type IsAny<Type> = MutuallyAssignable<UniqueTypeA> extends
+  MutuallyAssignable<UniqueTypeB & Type> ? true : false;
+
+/**
+ * Asserts that a type does not contain a property with the `any` type anywhere
+ * in its definition, recursively. This does not consider the argument or
+ * return types of functions or constructors.
+ */
+export type ForbidAny<Type> = ContainsAny<Type> extends false ? Pass
+  : Failure<[
+    "Expected type not to contain any properties with `any` type, but it contained some.",
+    { Type: Type; AnyPath: ContainsAny<Type> },
+  ]>;
+
+type ContainsAny<Type, Path extends any[] = []> = IsAny<Type> extends false
+  ? Type extends Primitive ? false
+  : Type extends Array<infer Item> ? ContainsAny<Item, [...Path, number]>
+  : {
+    [property in keyof Type]: Type[property] extends Function ? never
+      : FalseNever<ContainsAny<Type[property], [...Path, property]>>;
+  }[keyof Type]
+  : Path;
+
+type FalseNever<T> = T extends false ? never : T;
+
+assertStatic<
+  ForbidAny<{
+    a: [2, 3, any] & { a: any };
+    b: any;
+    c: 4;
+  }>
+>();
+
+type TypeEqualsHelper<
+  Actual,
+  ActualToCompare,
+  Expected,
+  ExpectedToCompare,
+> = MutuallyAssignable<Expected> extends MutuallyAssignable<Actual> ? (
+  Pass
+)
+  : (
+    Failure<[
+      DontDistribute<ExpectedToCompare> extends DontDistribute<ActualToCompare>
+        ? DontDistribute<ActualToCompare> extends
+          DontDistribute<ExpectedToCompare>
+          ? "Expected types to be identical, but they have a weird relationship that assert_static doesn't understand (this is a bug)."
+        : "Expected types to be identical, but the expected type extends the actual type."
+        : DontDistribute<ActualToCompare> extends
+          DontDistribute<ExpectedToCompare>
+          ? "Expected types to be identical, but the actual type extends the expected type."
+        : "Expected types to be identical, but they were unrelated.",
+      {
+        // Actual: Actual;
+        // Expected: Expected;
+        ActualToCompare: ActualToCompare;
+        ExpectedToCompare: ExpectedToCompare;
+      },
+    ]>
+  );
+
+// Type variance magic I don't fully understand.
+type MutuallyAssignable<T> = (_: T) => T;
+type DontDistribute<T> = (_: T) => void;
 
 type Primitive =
   | string
@@ -14,28 +117,22 @@ type Primitive =
   | null
   | void;
 
-////////////////////// tuple types are weird
+// Maybe we want this capability, but for the common case we shouldn't need it.
 
 // Simplify a type, to make them easier to compare.
 type DeepSimplify<T> = DeepSimplify_1_Any<T>;
-enum Aleph {
-  _ = "",
-}
-enum Omicron {
-  _ = "",
-}
 
 // Replace `any` with our `Any` type.
-type DeepSimplify_1_Any<T> = AsArgAndReturn<Omicron> extends
-  AsArgAndReturn<Aleph & T> ? Any
+type DeepSimplify_1_Any<T> = MutuallyAssignable<UniqueTypeB> extends
+  MutuallyAssignable<UniqueTypeA & T> ? Any
   : DeepSimplify_2_Unknown<T>;
 enum Any {
   _ = "",
 }
 
-// Replace `any` with our `Unknown` type.
-type DeepSimplify_2_Unknown<T> = AsArgAndReturn<Aleph> extends
-  AsArgAndReturn<Aleph | T> ? Unknown
+// Replace `unknown` with our `Unknown` type.
+type DeepSimplify_2_Unknown<T> = MutuallyAssignable<UniqueTypeA> extends
+  MutuallyAssignable<UniqueTypeA | T> ? Unknown
   : DeepSimplify_3_Primitive<T>;
 enum Unknown {
   _ = "",
@@ -80,48 +177,3 @@ type DeepSimplify_7_Object<T> = T extends Record<infer P, infer V> ? {
   [p in P]: DeepSimplify<T[p]>;
 }
   : {};
-
-export type TypeEquals<Actual, Expected> = TypeEqualsHelper<
-  Actual,
-  DeepSimplify<Actual>,
-  Expected,
-  DeepSimplify<Expected>
->;
-
-type TypeEqualsHelper<
-  Actual,
-  ActualSimplified,
-  Expected,
-  ExpectedSimplified,
-> = AsArgAndReturn<Expected> extends AsArgAndReturn<Actual> ? (
-  Pass
-)
-  : (
-    Failure<[
-      DontDistribute<ExpectedSimplified> extends
-        DontDistribute<ActualSimplified>
-        ? DontDistribute<ActualSimplified> extends
-          DontDistribute<ExpectedSimplified>
-          ? "Expected types to be identical, but they have a weird relationship that assert_static doesn't understand (this is a bug)."
-        : "Expected types to be identical, but the expected type extends the actual type."
-        : DontDistribute<ActualSimplified> extends
-          DontDistribute<ExpectedSimplified>
-          ? "Expected types to be identical, but the actual type extends the expected type."
-        : "Expected types to be identical, but they were unrelated.",
-      {
-        // Actual: Actual;
-        // Expected: Expected;
-        ActualSimplified: ActualSimplified;
-        ExpectedSimplified: ExpectedSimplified;
-      },
-    ]>
-  );
-
-// Type variance magic I don't fully understand.
-type AsArgAndReturn<T> = (_: T) => T;
-type AsArg<T> = (_: T) => void;
-type AsReturn<T> = () => T;
-
-// Used on both sides of an `extends` to ensure it produces a single result
-// for union types, instead of distributing across them.
-type DontDistribute<T> = AsArg<T>;
