@@ -58,8 +58,8 @@ export type ForbidAny<Type> = ContainsAny<Type> extends false ? Pass
 
 type ContainsAny<Type, Path extends any[] = []> = IsAny<Type> extends false
   ? Type extends Primitive ? false
-  : Type extends Array<infer Item> ? ContainsAny<Item, [...Path, number]>
-  : {
+  : // : Type extends Array<infer Item> ? ContainsAny<Item, [...Path, number]>
+  {
     [property in keyof Type]: Type[property] extends Function ? never
       : FalseNever<ContainsAny<Type[property], [...Path, property]>>;
   }[keyof Type]
@@ -69,8 +69,8 @@ type FalseNever<T> = T extends false ? never : T;
 
 assertStatic<
   ForbidAny<{
-    a: [2, 3, any] & { a: any };
-    b: any;
+    a: [2, 3];
+    b: 2;
     c: 4;
   }>
 >();
