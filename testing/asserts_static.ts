@@ -48,18 +48,19 @@ type IsAny<Type> = MutuallyAssignable<UniqueTypeA> extends
 /**
  * Asserts that a type does not contain a property with the `any` type anywhere
  * in its definition, recursively. This does not consider the argument or
- * return types of functions or constructors.
+ * return types of functions or constructors. Array entries are checked instead
+ * of properties.
  */
 export type ForbidAny<Type> = ContainsAny<Type> extends false ? Pass
   : Failure<[
     "Expected type not to contain any properties with `any` type, but it contained some.",
-    { Type: Type; AnyPath: ContainsAny<Type> },
+    { Type: Type; Where: ContainsAny<Type> },
   ]>;
 
 type ContainsAny<Type, Path extends any[] = []> = IsAny<Type> extends false
   ? Type extends Primitive ? false
-  : // : Type extends Array<infer Item> ? ContainsAny<Item, [...Path, number]>
-  {
+  : Type extends Array<infer Item> ? ContainsAny<Item, [...Path, number]>
+  : {
     [property in keyof Type]: Type[property] extends Function ? never
       : FalseNever<ContainsAny<Type[property], [...Path, property]>>;
   }[keyof Type]
@@ -69,7 +70,7 @@ type FalseNever<T> = T extends false ? never : T;
 
 assertStatic<
   ForbidAny<{
-    a: [2, 3];
+    a: [2, 3, 3];
     b: 2;
     c: 4;
   }>
