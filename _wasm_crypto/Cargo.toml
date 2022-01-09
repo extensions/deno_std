@@ -24,6 +24,7 @@ digest = { version = "0.10.1", features = ["core-api", "std"] }
 generic-array = "0.14.5"
 js-sys = "0.3.55"
 md-5 = "0.10.0"
+md4 = "0.10.0"
 ripemd = "0.1.0"
 sha-1 = "0.10.0"
 sha2 = "0.10.1"
