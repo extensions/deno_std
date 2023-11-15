@@ -30,6 +30,7 @@
  * // https://deno.land/std/crypto/crypto.ts
  * const webCryptoDigestAlgorithms = [
  *   "SHA-384",
+ *   // insecure (length-extendable):
  *   "SHA-256",
  *   "SHA-512",
  *   // insecure (length-extendable and collidable):
@@ -231,7 +232,9 @@ const stdCrypto: StdCrypto = ((x) => x)({
 
       // We delegate to WebCrypto whenever possible,
       if (
-        // if the algorithm is supported by the WebCrypto standard,
+        // If WebCrypto's digest implementation is available
+        webCrypto.subtle.digest &&
+        // and the algorithm is supported by the WebCrypto standard,
         (webCryptoDigestAlgorithms as readonly string[]).includes(name) &&
         // and the data is a single buffer,
         bytes
@@ -265,7 +268,7 @@ const stdCrypto: StdCrypto = ((x) => x)({
             "data must be a BufferSource or [Async]Iterable<BufferSource>",
           );
         }
-      } else if (webCrypto.subtle?.digest) {
+      } else if (webCrypto.subtle.digest) {
         // (TypeScript type definitions prohibit this case.) If they're trying
         // to call an algorithm we don't recognize, pass it along to WebCrypto
         // in case it's a non-standard algorithm supported by the the runtime
@@ -324,6 +327,7 @@ const FNVAlgorithms = ["FNV32", "FNV32A", "FNV64", "FNV64A"];
 /** Digest algorithms supported by WebCrypto. */
 const webCryptoDigestAlgorithms = [
   "SHA-384",
+  // insecure (length-extendable):
   "SHA-256",
   "SHA-512",
   // insecure (length-extendable and collidable):

@@ -1,9 +1,9 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 import { assert, assertEquals, assertInstanceOf, fail } from "../assert/mod.ts";
-import { crypto as stdCrypto } from "./mod.ts";
+import { crypto as stdCrypto, DigestAlgorithmName } from "./mod.ts";
 import { repeat } from "../bytes/repeat.ts";
 import { dirname, fromFileUrl } from "../path/mod.ts";
-import { DigestAlgorithm, digestAlgorithms } from "./_wasm/mod.ts";
+import { digestAlgorithms } from "./_wasm/mod.ts";
 const moduleDir = dirname(fromFileUrl(import.meta.url));
 
 const webCrypto = globalThis.crypto;
@@ -372,6 +372,10 @@ const allErrors = {
   "BLAKE2B-384": Error,
   BLAKE2S: Error,
   BLAKE3: Error,
+  FNV32: Error,
+  FNV32A: Error,
+  FNV64: Error,
+  FNV64A: Error,
   "KECCAK-224": Error,
   "KECCAK-256": Error,
   "KECCAK-384": Error,
@@ -404,7 +408,7 @@ const digestCases: [
   { length?: number },
   // The expected digest output for each hash algorithm, or an Error type if the
   // algorithm isn't expected to this input.
-  Record<DigestAlgorithm, string | ErrorConstructor>,
+  Record<DigestAlgorithmName, string | ErrorConstructor>,
 ][] = [
   ["Empty", [[], [""], [new ArrayBuffer(0), new BigInt64Array(0)]], {}, {
     BLAKE2B:
@@ -417,6 +421,10 @@ const digestCases: [
       "b32811423377f52d7862286ee1a72ee540524380fda1724a6f25d7978c6fd3244a6caf0498812673c5e05ef583825100",
     BLAKE2S: "69217a3079908094e11121d042354a7c1f55b6482ca1a51e1b250dfd1ed0eef9",
     BLAKE3: "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    FNV32: "",
+    FNV32A: "",
+    FNV64: "",
+    FNV64A: "",
     "KECCAK-224": "f71837502ba8e10837bdd8d365adb85591895602fc552b48b7390abd",
     "KECCAK-256":
       "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
@@ -475,6 +483,10 @@ const digestCases: [
         "9265ed0d889a1327114cffa6fa682dce051855e24f9393a3faa7e4791124c9db1abef28f95f677134edefc63b02066d9",
       "KECCAK-512":
         "40f0a44b4452c44baf401b49411f861caac716ba87be7d6894757f1114fcec44a4d4a9f44bcab569fabc676e761fe9d097dd191d5d9c71d66250b3e867071553",
+      FNV32: "",
+      FNV32A: "",
+      FNV64: "",
+      FNV64A: "",
       MD4: "47c61a0fa8738ba77308a8a600f88e4b",
       MD5: "93b885adfe0da089cdf634904fd59f71",
       "RIPEMD-160": "c81b94933420221a7ac004a90242d8b1d3e5070d",
@@ -501,131 +513,67 @@ const digestCases: [
     },
   ],
 
-  ["Output length: 20", [["", "hello world", ""], ["hello ", "world"]], {
-    length: 20,
-  }, {
-    BLAKE2B: Error,
-    "BLAKE2B-128": Error,
-    "BLAKE2B-224": Error,
-    "BLAKE2B-256": Error,
-    "BLAKE2B-384": Error,
-    BLAKE2S: Error,
-    BLAKE3: "d74981efa70a0c880b8d8c1985d075dbcbf679b9",
-    "KECCAK-224": Error,
-    "KECCAK-256": Error,
-    "KECCAK-384": Error,
-    "KECCAK-512": Error,
-    MD4: Error,
-    MD5: Error,
-    "RIPEMD-160": "98c615784ccb5fe5936fbc0cbe9dfdb408d92f0f",
-    "SHA-1": "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
-    "SHA-224": Error,
-    "SHA-256": Error,
-    "SHA3-224": Error,
-    "SHA3-256": Error,
-    "SHA3-384": Error,
-    "SHA3-512": Error,
-    "SHA-384": Error,
-    "SHA-512": Error,
-    SHAKE128: "3a9159f071e4dd1c8c4f968607c30942e120d815",
-    SHAKE256: "369771bb2cb9d2b04c1d54cca487e372d9f187f7",
-    TIGER: Error,
-  }],
-
   ["Output length: 3", [["hello world"], ["hell", "o w", "orld"]], {
     length: 3,
   }, {
-    BLAKE2B: Error,
-    "BLAKE2B-128": Error,
-    "BLAKE2B-224": Error,
-    "BLAKE2B-256": Error,
-    "BLAKE2B-384": Error,
-    BLAKE2S: Error,
+    ...allErrors,
     BLAKE3: "d74981",
-    "KECCAK-224": Error,
-    "KECCAK-256": Error,
-    "KECCAK-384": Error,
-    "KECCAK-512": Error,
-    MD4: Error,
-    MD5: Error,
-    "RIPEMD-160": Error,
-    "SHA-1": Error,
-    "SHA-224": Error,
-    "SHA-256": Error,
-    "SHA3-224": Error,
-    "SHA3-256": Error,
-    "SHA3-384": Error,
-    "SHA3-512": Error,
-    "SHA-384": Error,
-    "SHA-512": Error,
     SHAKE128: "3a9159",
     SHAKE256: "369771",
-    TIGER: Error,
+  }],
+
+  ["Output length: 4", [["deno"]], {
+    length: 4,
+  }, {
+    ...allErrors,
+    BLAKE3: "",
+    FNV32: "6ed5a7a9",
+    FNV32A: "8ef64711",
+    SHAKE128: "",
+    SHAKE256: "",
+  }],
+
+  ["Output length: 8", [["deno"]], {
+    length: 8,
+  }, {
+    ...allErrors,
+    BLAKE3: "",
+    FNV64: "14edb27eecdaadc9",
+    FNV64A: "a5d9fb67426e48b1",
+    SHAKE128: "",
+    SHAKE256: "",
+  }],
+
+  ["Output length: 20", [["", "hello world", ""], ["hello ", "world"]], {
+    length: 20,
+  }, {
+    ...allErrors,
+    BLAKE3: "d74981efa70a0c880b8d8c1985d075dbcbf679b9",
+    "RIPEMD-160": "98c615784ccb5fe5936fbc0cbe9dfdb408d92f0f",
+    "SHA-1": "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+    SHAKE128: "3a9159f071e4dd1c8c4f968607c30942e120d815",
+    SHAKE256: "369771bb2cb9d2b04c1d54cca487e372d9f187f7",
   }],
 
   ["Output length: 123", [["hello world"], ["hell", "o w", "orld"]], {
     length: 123,
   }, {
-    BLAKE2B: Error,
-    "BLAKE2B-128": Error,
-    "BLAKE2B-224": Error,
-    "BLAKE2B-256": Error,
-    "BLAKE2B-384": Error,
-    BLAKE2S: Error,
+    ...allErrors,
     BLAKE3:
       "d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24a020ed55aed9a6ab2eaf3fd70d2c98c949e142d8f42a10250190b699e02cf9eb68612e1a556fee6cf726bcb0994f7d3e669eda394788f8c80a4f0ea056be3d4dffd8069d7ef9a714a47a4cdef62c5402a25d7994384b07bfcf8479",
-    "KECCAK-224": Error,
-    "KECCAK-256": Error,
-    "KECCAK-384": Error,
-    "KECCAK-512": Error,
-    MD4: Error,
-    MD5: Error,
-    "RIPEMD-160": Error,
-    "SHA-1": Error,
-    "SHA-224": Error,
-    "SHA-256": Error,
-    "SHA3-224": Error,
-    "SHA3-256": Error,
-    "SHA3-384": Error,
-    "SHA3-512": Error,
-    "SHA-384": Error,
-    "SHA-512": Error,
     SHAKE128:
       "3a9159f071e4dd1c8c4f968607c30942e120d8156b8b1e72e0d376e8871cb8b899072665674f26cc494a4bcf027c58267e8ee2da60e942759de86d2670bba1aa47bffd20b48b1d2aa7c3349f8215d1b99ca65bdb1770a220f67456f602436032afce7f24e534e7bfcdab9b35affa0ff891074302c19970d7359a8c",
     SHAKE256:
       "369771bb2cb9d2b04c1d54cca487e372d9f187f73f7ba3f65b95c8ee7798c527f4f3c2d55c2d46a29f2e945d469c3df27853a8735271f5cc2d9e889544357116bb60a24af659151563156eebbf68810dd95c6fcccac0650132ba30bef9bf75b0d483becb935be8688b26ffb294d8284edd64a97325d6be0a423f23",
-    TIGER: Error,
   }],
 
   ["Output length: 0", [[""]], {
     length: 0,
   }, {
-    BLAKE2B: Error,
-    "BLAKE2B-128": Error,
-    "BLAKE2B-224": Error,
-    "BLAKE2B-256": Error,
-    "BLAKE2B-384": Error,
-    BLAKE2S: Error,
+    ...allErrors,
     BLAKE3: "",
-    "KECCAK-224": Error,
-    "KECCAK-256": Error,
-    "KECCAK-384": Error,
-    "KECCAK-512": Error,
-    MD4: Error,
-    MD5: Error,
-    "RIPEMD-160": Error,
-    "SHA-1": Error,
-    "SHA-224": Error,
-    "SHA-256": Error,
-    "SHA3-224": Error,
-    "SHA3-256": Error,
-    "SHA3-384": Error,
-    "SHA3-512": Error,
-    "SHA-384": Error,
-    "SHA-512": Error,
     SHAKE128: "",
     SHAKE256: "",
-    TIGER: Error,
   }],
 
   ["Negative length", [[""]], { length: -1 }, allErrors],
@@ -654,6 +602,10 @@ const digestCases: [
       "0300b1c3d7deeca947263590d4777b0df0e7869ded64d63afafcfb3da4df5e542bfe309667436f534cd3b9cb9ee5f938",
     BLAKE2S: "c1b9bffb9bb1fa42f26ce72ad457bef071a7713532c37b772a3a7e8b353551fc",
     BLAKE3: "7fc79f34e187d62c474af7d57531a77f193ab6f2fae71c6de155b341cb592fe5",
+    FNV32: "",
+    FNV32A: "",
+    FNV64: "",
+    FNV64A: "",
     "KECCAK-224": "8186d48ddde40e518b203db01cc105f0d4a1f46341322730f9c61b51",
     "KECCAK-256":
       "c1b36a3fdc9d8c4f337a8f9cf627e703718fd2d2559b366ec310d75cd03ddc94",
@@ -703,6 +655,10 @@ const digestCases: [
         "ecf3769441e140f8c8e0a2176cb4ef57fa09befc90a845ce5be8c99ada200bd2",
       BLAKE3:
         "8549694280dea254adb1b856779d2d4f09256004e7536bbf544a1859e66b5f9c",
+      FNV32: "",
+      FNV32A: "",
+      FNV64: "",
+      FNV64A: "",
       "KECCAK-224": "93ef86f74392e3a635c65df746b0f990bcb13b053301e52f51fab144",
       "KECCAK-256":
         "029a0c3cca4954e17606ac31dd3ac30492e36ecfcac3dc73e269a336782f2f1d",
@@ -761,6 +717,10 @@ const digestCases: [
         "627f9025def22ddbf8ccfba535900aa8dd79ce532778aeae138fa797dd479008",
       BLAKE3:
         "5af7084d217935de95ffd87daadc037ba08bdda86e14e02716cb2eb4054e2297",
+      FNV32: "",
+      FNV32A: "",
+      FNV64: "",
+      FNV64A: "",
       "KECCAK-224": "5b620623f63faf310190cd69fada226f4ba51b5766c2eef4d69ec7f8",
       "KECCAK-256":
         "fbfcc67319c5a077a3304ff6a8bb791f1e8aa7005d0fb71511dedf706f3018db",
@@ -1324,36 +1284,17 @@ const digestCases: [
   ],
 ];
 
-Deno.test("[crypto/digest/fnv] fnv algorithm implementation", () => {
-  const inputString = "deno";
-  const inputBytes = new TextEncoder().encode(inputString);
-
-  const expectedDigest32 = "6ed5a7a9";
-  const expectedDigest32a = "8ef64711";
-
-  const expectedDigest64 = "14edb27eecdaadc9";
-  const expectedDigest64a = "a5d9fb67426e48b1";
-
-  assertEquals(
-    toHexString(stdCrypto.subtle.digestSync("FNV32", inputBytes)),
-    expectedDigest32,
-  );
-  assertEquals(
-    toHexString(stdCrypto.subtle.digestSync("FNV32A", inputBytes)),
-    expectedDigest32a,
-  );
-
-  assertEquals(
-    toHexString(stdCrypto.subtle.digestSync("FNV64", inputBytes)),
-    expectedDigest64,
-  );
-  assertEquals(
-    toHexString(stdCrypto.subtle.digestSync("FNV64A", inputBytes)),
-    expectedDigest64a,
-  );
-});
-
-for (const algorithm of digestAlgorithms) {
+for (
+  const algorithm of (digestAlgorithms as readonly DigestAlgorithmName[])
+    .concat(
+      [
+        "FNV32",
+        "FNV32A",
+        "FNV64",
+        "FNV64A",
+      ],
+    )
+) {
   Deno.test(`[crypto/digest/${algorithm}] test vectors`, async () => {
     for (
       const [caption, piecesVariations, options, algorithms] of digestCases
@@ -1382,6 +1323,19 @@ for (const algorithm of digestAlgorithms) {
             } with options ${
               JSON.stringify(options)
             }) returned unexpected value\n  actual: ${actual}\nexpected: ${expected}`,
+          );
+          const syncActual = toHexString(stdCrypto.subtle.digestSync({
+            ...options,
+            name: algorithm,
+          }, bytePieces));
+          assertEquals(
+            expected,
+            syncActual,
+            `${algorithm} of ${caption}${
+              i > 0 ? ` (but not until variation [${i}]!)` : ""
+            } with options ${
+              JSON.stringify(options)
+            }) returned unexpected value from .digestSync(), although the async result was correct\n  actual: ${syncActual}\nexpected: ${expected}`,
           );
         } else if (typeof expected === "function") {
           let error;
