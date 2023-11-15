@@ -526,22 +526,22 @@ const digestCases: [
     length: 4,
   }, {
     ...allErrors,
-    BLAKE3: "",
+    BLAKE3: "e5dd810d",
     FNV32: "6ed5a7a9",
     FNV32A: "8ef64711",
-    SHAKE128: "",
-    SHAKE256: "",
+    SHAKE128: "3807a9a8",
+    SHAKE256: "2badcaf4",
   }],
 
   ["Output length: 8", [["deno"]], {
     length: 8,
   }, {
     ...allErrors,
-    BLAKE3: "",
+    BLAKE3: "e5dd810dd67713fa",
     FNV64: "14edb27eecdaadc9",
     FNV64A: "a5d9fb67426e48b1",
-    SHAKE128: "",
-    SHAKE256: "",
+    SHAKE128: "3807a9a8ab333a92",
+    SHAKE256: "2badcaf4114cee41",
   }],
 
   ["Output length: 20", [["", "hello world", ""], ["hello ", "world"]], {

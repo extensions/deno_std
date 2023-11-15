@@ -4,11 +4,7 @@
 import { fnv32, fnv32a } from "./fnv32.ts";
 import { fnv64, fnv64a } from "./fnv64.ts";
 
-export function fnv(name: string, buf?: Uint8Array): ArrayBuffer {
-  if (!buf) {
-    throw new TypeError("no data provided for hashing");
-  }
-
+export function fnv(name: string, buf: Uint8Array): ArrayBuffer {
   switch (name) {
     case "FNV32":
       return fnv32(buf);

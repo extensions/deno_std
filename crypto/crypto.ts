@@ -154,6 +154,10 @@ const webCrypto = ((crypto) => ({
   },
 }))(globalThis.crypto);
 
+/**
+ * Returns data as a Uint8Array if it's a valid BufferSource, otherwise
+ * returns undefined.
+ */
 const bufferSourceBytes = (data: BufferSource | unknown) => {
   let bytes: Uint8Array | undefined;
   if (data instanceof Uint8Array) {
