@@ -368,10 +368,10 @@ const digestCases: [
     SHAKE256:
       "46b9dd2b0ba88d13233b3feb743eeb243fcd52ea62b81b82b50c27646ed5762fd75dc4ddd8c0f200cb05019d67b592f6fc821c49479ab48640292eacb3b7c4be",
     TIGER: "3293ac630c13f0245f92bbb1766e16167a4e58492dde73f3",
-    FNV32: "",
-    FNV32A: "",
-    FNV64: "",
-    FNV64A: "",
+    FNV32: "811c9dc5",
+    FNV32A: "811c9dc5",
+    FNV64: "cbf29ce484222325",
+    FNV64A: "cbf29ce484222325",
   }],
 
   [
@@ -430,6 +430,54 @@ const digestCases: [
       FNV64A: "",
     },
   ],
+
+  ["deno", [["deno"]], {}, {
+    BLAKE2B:
+      "4497d020960f2b1af17b2b92c5d4ad3cdae9ad467cae6714d49c25c04bb6a2fd3906cdc9e1b85feafea3a947c979a1c8ebc1d9c3427ba78bde76f688646b74f3",
+    "BLAKE2B-128": "72c12ff54c63ef2cdbb033f3de893057",
+    "BLAKE2B-160": "fa868088559126444713c99bf50cec0c60b25386",
+    "BLAKE2B-224": "50b36844947ae8852458bad0eb1b89ec9c071ad27b98f5534a44646e",
+    "BLAKE2B-256":
+      "66839e9f6d998752d2a9f100629e16691504264d21ad10939ca939e557e75248",
+    "BLAKE2B-384":
+      "e296c0eebafba162e22590da157532d9cb11dfe80cf017bff4e0264b8639f4c1b11a91ee005a4b924aa4329962d61089",
+    BLAKE2S: "75262f749537fd45f227efb42b9f4b5eda79e27e9ba68b87725e840f8c1c1447",
+    BLAKE3: "e5dd810dd67713fab4438e17516c7ea13a35666900ece70a561184ff68de8d79",
+    "KECCAK-224": "eac9e095e9fc33db1134f07955444d7655eed64f96f5de5261e96cca",
+    "KECCAK-256":
+      "a76ec0ee8032c358a9697caa436ee1c2283a4073e48ecb5231f0ddea4f0a3921",
+    "KECCAK-384":
+      "67f6026c3741e241919b19c1ade12b83576239e1738494c43614b1c84c31b3d4b928f135cd0db4189fdbb9d41c0c5fd0",
+    "KECCAK-512":
+      "fddc1dfda24ee1c1ac011bfbc0d8dd3340af4ab49444d3c978114b05b8a5a9240c725c4b37c6681a3286a0f1a4891eb77d5d5ba46b50e9ade42339c200293930",
+    MD4: "594749a3bef632d12ab7067469aa8aed",
+    MD5: "c8772b401bc911da102a5291cc4ec83b",
+    "RIPEMD-160": "dc3c354a2004fc9bf46c64729e9b556eb414b812",
+    "SHA-1": "bb3d8e712d9e7ad4af08d4a38f3f52d9683d58eb",
+    "SHA-224": "c34ee73c656a6a6437b70610e261be4412c650acabdb20e26f11f620",
+    "SHA-256":
+      "e872e7bd2ae6abcf13a4c834029a342c882c1162ebf77b6720968b2000312ffb",
+    "SHA3-224": "4da3f5328887217780db9790d71a978e2ad19927616ba8863d79ce33",
+    "SHA3-256":
+      "74a6286af90f8775d74080f864cf80b11eecf6f14d325c5ef8c9f7ccc8055517",
+    "SHA3-384":
+      "9cb19574077f07a44d980e9e84bc155951f37d97fa527ae6007cb0252274d8b392523110d10101cef1f0bde11fd95dee",
+    "SHA3-512":
+      "9e248199d744a8d810e7fda8207f98f27453bd6cb5a02965b5477d3d07516bbac6831009eedddadc8901d742dbfe3fd4afa770230a84e4d51bf30a0c99efa03c",
+    "SHA-384":
+      "d6a359079da9d9a1c8ecec1d84b85ed9ca198976bfa50953867536d79e8628480f6e63adcb7f6a782de68bf5a1c96349",
+    "SHA-512":
+      "05b6ef7b13673c57c455d968cb7acbdd4fe10e24f25520763d69025d768d14124987b14e3aff8ff1565aaeba1c405fc89cc435938ff46a426f697b0f509e3799",
+    SHAKE128:
+      "3807a9a8ab333a92edcfc1c2ada9c8a03de98ef596ba691ea8473dea94d3371d",
+    SHAKE256:
+      "2badcaf4114cee41f9f0f167114b6e5d53eb5cfc9b986a00a60d50b6d9ef7e857b034e42837c84791b6b76787bf2d12cf672af9b78299f80d472882931452fa0",
+    TIGER: "13ac2596a881dfc66046e235acd4bc6909d73a2c9aa449b9",
+    FNV32: "6ed5a7a9",
+    FNV32A: "8ef64711",
+    FNV64: "14edb27eecdaadc9",
+    FNV64A: "a5d9fb67426e48b1",
+  }],
 
   ["Output length: 20", [["", "hello world", ""], ["hello ", "world"]], {
     length: 20,
@@ -1289,35 +1337,6 @@ const digestCases: [
   ],
 ];
 
-Deno.test("digest() checks FNV algorithm implementation", () => {
-  const inputString = "deno";
-  const inputBytes = new TextEncoder().encode(inputString);
-
-  const expectedDigest32 = "6ed5a7a9";
-  const expectedDigest32a = "8ef64711";
-
-  const expectedDigest64 = "14edb27eecdaadc9";
-  const expectedDigest64a = "a5d9fb67426e48b1";
-
-  assertEquals(
-    encodeHex(stdCrypto.subtle.digestSync("FNV32", inputBytes)),
-    expectedDigest32,
-  );
-  assertEquals(
-    encodeHex(stdCrypto.subtle.digestSync("FNV32A", inputBytes)),
-    expectedDigest32a,
-  );
-
-  assertEquals(
-    encodeHex(stdCrypto.subtle.digestSync("FNV64", inputBytes)),
-    expectedDigest64,
-  );
-  assertEquals(
-    encodeHex(stdCrypto.subtle.digestSync("FNV64A", inputBytes)),
-    expectedDigest64a,
-  );
-});
-
 for (const algorithm of DIGEST_ALGORITHMS) {
   Deno.test(`digest() checks ${algorithm} vectors`, async () => {
     for (
@@ -1332,7 +1351,6 @@ for (const algorithm of DIGEST_ALGORITHMS) {
         // to return successfully, or an error class/constructor function, if
         // the case is expected to throw.
         if (typeof expected === "string") {
-          console.log(bytePieces);
           const actual = encodeHex(
             await stdCrypto.subtle.digest({
               ...options,

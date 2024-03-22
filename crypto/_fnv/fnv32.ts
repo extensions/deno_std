@@ -7,8 +7,8 @@
 
 import { mul32, swap32 } from "./util.ts";
 
-const PRIME_32 = 16777619;
-const OFFSET_32 = 2166136261;
+const PRIME_32 = 0x0100_0193;
+const OFFSET_32 = 0x811C_9DC5;
 
 export class Fnv32 {
   #hash = OFFSET_32;

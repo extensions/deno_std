@@ -7,10 +7,10 @@
 
 import { mul64, swap32 } from "./util.ts";
 
-const PRIME_64_HIGH = 256;
-const PRIME_64_LOW = 435;
-const OFFSET_64_HIGH = 3421674724;
-const OFFSET_64_LOW = 2216829733;
+const PRIME_64_HIGH = 0x0000_0100;
+const PRIME_64_LOW = 0x0000_01B3;
+const OFFSET_64_HIGH = 0xCBF2_9CE4;
+const OFFSET_64_LOW = 0x8422_2325;
 
 export class Fnv64 {
   #hashHigh = OFFSET_64_HIGH;

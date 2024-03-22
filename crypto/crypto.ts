@@ -112,7 +112,7 @@ import {
   digestAlgorithms as wasmDigestAlgorithms,
   instantiateWasm,
 } from "./_wasm/mod.ts";
-import { fnv } from "./_fnv/mod.ts";
+import { FNV_IMPLEMENTATIONS } from "./_fnv/mod.ts";
 
 export { type WasmDigestAlgorithm, wasmDigestAlgorithms };
 
@@ -202,10 +202,6 @@ const stdCrypto: StdCrypto = ((x) => x)({
 
       const bytes = bufferSourceBytes(data);
 
-      if ((FNV_ALGORITHMS as string[]).includes(name)) {
-        return fnv(name, bytes);
-      }
-
       // We delegate to WebCrypto whenever possible,
       if (
         // if the algorithm is supported by the WebCrypto standard,
@@ -214,6 +210,36 @@ const stdCrypto: StdCrypto = ((x) => x)({
         bytes
       ) {
         return webCrypto.subtle.digest(algorithm, bytes);
+      } else if ((FNV_ALGORITHMS as string[]).includes(name)) {
+        const context = new FNV_IMPLEMENTATIONS[name as FNVAlgorithms]();
+
+        if (bytes) {
+          context.update(bytes);
+        } else if ((data as Iterable<BufferSource>)[Symbol.iterator]) {
+          for (const chunk of data as Iterable<BufferSource>) {
+            const chunkBytes = bufferSourceBytes(chunk);
+            if (!chunkBytes) {
+              throw new TypeError("data contained chunk of the wrong type");
+            }
+            context.update(chunkBytes);
+          }
+        } else if (
+          (data as AsyncIterable<BufferSource>)[Symbol.asyncIterator]
+        ) {
+          for await (const chunk of data as AsyncIterable<BufferSource>) {
+            const chunkBytes = bufferSourceBytes(chunk);
+            if (!chunkBytes) {
+              throw new TypeError("data contained chunk of the wrong type");
+            }
+            context.update(chunkBytes);
+          }
+        } else {
+          throw new TypeError(
+            "data must be a BufferSource or [Async]Iterable<BufferSource>",
+          );
+        }
+
+        return context.digest();
       } else if (wasmDigestAlgorithms.includes(name as WasmDigestAlgorithm)) {
         if (bytes) {
           // Otherwise, we use our bundled Wasm implementation via digestSync
@@ -267,7 +293,20 @@ const stdCrypto: StdCrypto = ((x) => x)({
       const bytes = bufferSourceBytes(data);
 
       if ((FNV_ALGORITHMS as string[]).includes(name)) {
-        return fnv(name, bytes);
+        const context = new FNV_IMPLEMENTATIONS[name as FNVAlgorithms]();
+        if (bytes) {
+          context.update(bytes);
+        } else if ((data as Iterable<BufferSource>)[Symbol.iterator]) {
+          for (const chunk of data as Iterable<BufferSource>) {
+            const chunkBytes = bufferSourceBytes(chunk);
+            if (!chunkBytes) {
+              throw new TypeError("data contained chunk of the wrong type");
+            }
+            context.update(chunkBytes);
+          }
+        }
+
+        return context.digest();
       }
 
       const wasmCrypto = instantiateWasm();
@@ -293,7 +332,12 @@ const stdCrypto: StdCrypto = ((x) => x)({
   },
 });
 
-export const FNV_ALGORITHMS: FNVAlgorithms[] = ["FNV32", "FNV32A", "FNV64", "FNV64A"];
+export const FNV_ALGORITHMS: FNVAlgorithms[] = [
+  "FNV32",
+  "FNV32A",
+  "FNV64",
+  "FNV64A",
+];
 
 /** Digest algorithms supported by WebCrypto. */
 const webCryptoDigestAlgorithms = [
@@ -310,7 +354,10 @@ export type FNVAlgorithms = "FNV32" | "FNV32A" | "FNV64" | "FNV64A";
 /** Extended digest algorithm names. */
 export type DigestAlgorithmName = WasmDigestAlgorithm | FNVAlgorithms;
 
-export const DIGEST_ALGORITHMS = (wasmDigestAlgorithms as readonly DigestAlgorithmName[]).concat(FNV_ALGORITHMS);
+export const DIGEST_ALGORITHMS =
+  (wasmDigestAlgorithms as readonly DigestAlgorithmName[]).concat(
+    FNV_ALGORITHMS,
+  );
 
 /*
  * The largest digest length the current Wasm implementation can support. This
