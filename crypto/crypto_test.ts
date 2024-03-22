@@ -1,9 +1,10 @@
 // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
 import { assert, assertEquals, assertInstanceOf, fail } from "../assert/mod.ts";
-import { crypto as stdCrypto } from "./mod.ts";
+import { type DigestAlgorithmName, crypto as stdCrypto } from "./mod.ts";
 import { repeat } from "../bytes/repeat.ts";
-import { type DigestAlgorithm, digestAlgorithms } from "./_wasm/mod.ts";
+import { digestAlgorithms } from "./_wasm/mod.ts";
 import { encodeHex } from "../encoding/hex.ts";
+import { DIGEST_ALGORITHMS } from "./crypto.ts";
 
 const webCrypto = globalThis.crypto;
 
@@ -306,6 +307,10 @@ const allErrors = {
   SHAKE128: Error,
   SHAKE256: Error,
   TIGER: Error,
+  FNV32: Error,
+  FNV32A: Error,
+  FNV64: Error,
+  FNV64A: Error,
 } as const;
 
 // Test inputs and expected results for each algorithm.
@@ -319,7 +324,7 @@ const digestCases: [
   { length?: number },
   // The expected digest output for each hash algorithm, or an Error type if the
   // algorithm isn't expected to this input.
-  Record<DigestAlgorithm, string | ErrorConstructor>,
+  Record<DigestAlgorithmName, string | ErrorConstructor>,
 ][] = [
   ["Empty", [[], [""], [new ArrayBuffer(0), new BigInt64Array(0)]], {}, {
     BLAKE2B:
@@ -363,6 +368,10 @@ const digestCases: [
     SHAKE256:
       "46b9dd2b0ba88d13233b3feb743eeb243fcd52ea62b81b82b50c27646ed5762fd75dc4ddd8c0f200cb05019d67b592f6fc821c49479ab48640292eacb3b7c4be",
     TIGER: "3293ac630c13f0245f92bbb1766e16167a4e58492dde73f3",
+    FNV32: "",
+    FNV32A: "",
+    FNV64: "",
+    FNV64A: "",
   }],
 
   [
@@ -415,6 +424,10 @@ const digestCases: [
       SHAKE256:
         "b8d01df855f7075882c636f6ddeacf41e5de0bbf30042ef0a86e36f4b8600d546c516501a6a3c821678d3d9943fa9e74b9b99fccd47aecc91dd1f4946b8355b3",
       TIGER: "5d9ed00a030e638bdb753a6a24fb900e5a63b8e73e6c25b6",
+      FNV32: "",
+      FNV32A: "",
+      FNV64: "",
+      FNV64A: "",
     },
   ],
 
@@ -448,6 +461,10 @@ const digestCases: [
     SHAKE128: "3a9159f071e4dd1c8c4f968607c30942e120d815",
     SHAKE256: "369771bb2cb9d2b04c1d54cca487e372d9f187f7",
     TIGER: Error,
+    FNV32: "",
+    FNV32A: "",
+    FNV64: "",
+    FNV64A: "",
   }],
 
   ["Output length: 3", [["hello world"], ["hell", "o w", "orld"]], {
@@ -480,6 +497,10 @@ const digestCases: [
     SHAKE128: "3a9159",
     SHAKE256: "369771",
     TIGER: Error,
+    FNV32: "",
+    FNV32A: "",
+    FNV64: "",
+    FNV64A: "",
   }],
 
   ["Output length: 123", [["hello world"], ["hell", "o w", "orld"]], {
@@ -515,6 +536,10 @@ const digestCases: [
     SHAKE256:
       "369771bb2cb9d2b04c1d54cca487e372d9f187f73f7ba3f65b95c8ee7798c527f4f3c2d55c2d46a29f2e945d469c3df27853a8735271f5cc2d9e889544357116bb60a24af659151563156eebbf68810dd95c6fcccac0650132ba30bef9bf75b0d483becb935be8688b26ffb294d8284edd64a97325d6be0a423f23",
     TIGER: Error,
+    FNV32: "",
+    FNV32A: "",
+    FNV64: "",
+    FNV64A: "",
   }],
 
   ["Output length: 0", [[""]], {
@@ -547,6 +572,10 @@ const digestCases: [
     SHAKE128: "",
     SHAKE256: "",
     TIGER: Error,
+    FNV32: "",
+    FNV32A: "",
+    FNV64: "",
+    FNV64A: "",
   }],
 
   ["Negative length", [[""]], { length: -1 }, allErrors],
@@ -606,6 +635,10 @@ const digestCases: [
     SHAKE256:
       "e39016c524adfa6efd8019d6bc6584bbb912bed38ab896a546a2ef648e120838085103118d3409caab6ed847a67b27085bdce9ffaa6408410431a706625f07bf",
     TIGER: "111764e3c4f512abce83c7ebdf061caca4f9a04177046509",
+    FNV32: "",
+    FNV32A: "",
+    FNV64: "",
+    FNV64A: "",
   }],
 
   [
@@ -656,6 +689,10 @@ const digestCases: [
       SHAKE256:
         "ad4ffc105a791884afd92917a64af4d9d25b1c9d41a8e06683ad03a62ee5c7166a98fdcb4b60ee55722582c0eb9f103be3b55166efa4c20fdfcc5a4e026330dd",
       TIGER: "affa436814964b03d0ab7d5743fcfdcaee2ad5ecb792e1eb",
+      FNV32: "",
+      FNV32A: "",
+      FNV64: "",
+      FNV64A: "",
     },
   ],
 
@@ -715,6 +752,10 @@ const digestCases: [
       SHAKE256:
         "5eb886f6cfe4460a3bac6e19bae068ea67e2d13507f880b770fe32c57914e9f10b6ffee3154e4bef277499055eb6c59138ecfa74f47c47b63edc451d57606b28",
       TIGER: "198fb3a090bd39a7f084a6296b466f49e47e81112268ec22",
+      FNV32: "",
+      FNV32A: "",
+      FNV64: "",
+      FNV64A: "",
     },
   ],
 
@@ -1277,7 +1318,7 @@ Deno.test("digest() checks fnv algorithm implementation", () => {
   );
 });
 
-for (const algorithm of digestAlgorithms) {
+for (const algorithm of DIGEST_ALGORITHMS) {
   Deno.test(`digest() checks ${algorithm} vectors`, async () => {
     for (
       const [caption, piecesVariations, options, algorithms] of digestCases

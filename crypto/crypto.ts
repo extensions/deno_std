@@ -202,7 +202,7 @@ const stdCrypto: StdCrypto = ((x) => x)({
 
       const bytes = bufferSourceBytes(data);
 
-      if (FNV_ALGORITHMS.includes(name)) {
+      if ((FNV_ALGORITHMS as string[]).includes(name)) {
         return fnv(name, bytes);
       }
 
@@ -266,7 +266,7 @@ const stdCrypto: StdCrypto = ((x) => x)({
 
       const bytes = bufferSourceBytes(data);
 
-      if (FNV_ALGORITHMS.includes(name)) {
+      if ((FNV_ALGORITHMS as string[]).includes(name)) {
         return fnv(name, bytes);
       }
 
@@ -293,7 +293,7 @@ const stdCrypto: StdCrypto = ((x) => x)({
   },
 });
 
-const FNV_ALGORITHMS = ["FNV32", "FNV32A", "FNV64", "FNV64A"];
+export const FNV_ALGORITHMS: FNVAlgorithms[] = ["FNV32", "FNV32A", "FNV64", "FNV64A"];
 
 /** Digest algorithms supported by WebCrypto. */
 const webCryptoDigestAlgorithms = [
@@ -309,6 +309,8 @@ export type FNVAlgorithms = "FNV32" | "FNV32A" | "FNV64" | "FNV64A";
 
 /** Extended digest algorithm names. */
 export type DigestAlgorithmName = WasmDigestAlgorithm | FNVAlgorithms;
+
+export const DIGEST_ALGORITHMS = (wasmDigestAlgorithms as readonly DigestAlgorithmName[]).concat(FNV_ALGORITHMS);
 
 /*
  * The largest digest length the current Wasm implementation can support. This
