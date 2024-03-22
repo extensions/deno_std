@@ -1,10 +1,12 @@
 // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
 import { assert, assertEquals, assertInstanceOf, fail } from "../assert/mod.ts";
-import { crypto as stdCrypto, type DigestAlgorithmName } from "./mod.ts";
+import {
+  crypto as stdCrypto,
+  DIGEST_ALGORITHM_NAMES,
+  type DigestAlgorithmName,
+} from "./mod.ts";
 import { repeat } from "../bytes/repeat.ts";
-import { digestAlgorithms } from "./_wasm/mod.ts";
 import { encodeHex } from "../encoding/hex.ts";
-import { DIGEST_ALGORITHMS } from "./crypto.ts";
 
 const webCrypto = globalThis.crypto;
 
@@ -1556,10 +1558,7 @@ const digestCases: [
   ],
 ];
 
-for (
-  const algorithm of Object.keys(allErrors) as typeof DIGEST_ALGORITHMS ||
-    DIGEST_ALGORITHMS
-) {
+for (const algorithm of DIGEST_ALGORITHM_NAMES) {
   Deno.test(`digest() checks ${algorithm} vectors`, async () => {
     for (
       const [caption, piecesVariations, options, algorithms] of digestCases

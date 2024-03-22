@@ -12,13 +12,13 @@ export {
  * official specification. All names are uppercase to facilitate case-insensitive
  * comparisons required by the WebCrypto spec.
  */
-export const digestAlgorithms = [
+export const DIGEST_ALGORITHM_NAMES = [
+  "BLAKE2B",
   "BLAKE2B-128",
   "BLAKE2B-160",
   "BLAKE2B-224",
   "BLAKE2B-256",
   "BLAKE2B-384",
-  "BLAKE2B",
   "BLAKE2S",
   "BLAKE3",
   "KECCAK-224",
@@ -38,7 +38,7 @@ export const digestAlgorithms = [
   "SHA-224",
   "SHA-256",
   "SHA-512",
-  // insecure (collidable and length-extendable):
+  // insecure (length-extendable and collidable):
   "MD4",
   "MD5",
   "SHA-1",
@@ -50,4 +50,4 @@ export const digestAlgorithms = [
 ] as const;
 
 /** An algorithm name supported by std/crypto/_wasm. */
-export type DigestAlgorithm = typeof digestAlgorithms[number];
+export type DigestAlgorithmName = typeof DIGEST_ALGORITHM_NAMES[number];

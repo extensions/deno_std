@@ -2,9 +2,20 @@
 // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
 import { assert, assertEquals } from "../../assert/mod.ts";
 
-import { crypto as stdCrypto, webCryptoDigestAlgorithms } from "../mod.ts";
+import { crypto as stdCrypto } from "../mod.ts";
+
+import { crypto as stableStdCrypto } from "jsr:@std/crypto@0.220.1";
 
 const webCrypto = globalThis.crypto;
+
+/** Digest algorithms supported by WebCrypto. */
+const webCryptoDigestAlgorithms = [
+  "SHA-384",
+  "SHA-256",
+  "SHA-512",
+  // insecure (length-extendable and collidable):
+  "SHA-1",
+] as const;
 
 // Wasm is limited to 32-bit operations, which SHA-256 is optimized for, while
 // SHA-512 is optimized for 64-bit operations and may be slower.
@@ -35,9 +46,10 @@ for (
     for (
       const implementation of [
         webCryptoDigestAlgorithms.includes(algorithm as any)
-          ? "WebCrypto"
+          ? "runtime WebCrypto"
           : false,
-        "@std/crypto",
+        "@std/crypto local",
+        "@std/crypto@0.220.1",
       ].filter(Boolean)
     ) {
       let lastDigest: ArrayBuffer | undefined;
@@ -50,9 +62,11 @@ for (
         }B ${implementation}`,
         async fn() {
           let digest;
-          if (implementation === "@std/crypto") {
+          if (implementation === "@std/crypto local") {
             digest = stdCrypto.subtle.digestSync(algorithm, buffer);
-          } else if (implementation === "WebCrypto") {
+          } else if (implementation === "@std/crypto@0.220.1") {
+            digest = stableStdCrypto.subtle.digestSync(algorithm, buffer);
+          } else if (implementation === "runtime WebCrypto") {
             digest = await webCrypto.subtle.digest(algorithm, buffer);
           } else {
             throw new Error(`Unknown implementation ${implementation}`);
