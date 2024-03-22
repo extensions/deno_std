@@ -113,6 +113,7 @@ import {
   instantiateWasm,
 } from "./_wasm/mod.ts";
 import { FNV_IMPLEMENTATIONS } from "./_fnv/mod.ts";
+import { FNV_LENGTHS } from "https://deno.land/std@$STD_VERSION/crypto/_fnv/mod.ts";
 
 export { type WasmDigestAlgorithm, wasmDigestAlgorithms };
 
@@ -212,6 +213,13 @@ const stdCrypto: StdCrypto = ((x) => x)({
         return webCrypto.subtle.digest(algorithm, bytes);
       } else if ((FNV_ALGORITHMS as string[]).includes(name)) {
         const context = new FNV_IMPLEMENTATIONS[name as FNVAlgorithms]();
+        const supportedLength = FNV_LENGTHS[name as FNVAlgorithms];
+
+        if (length !== undefined && length !== supportedLength) {
+          throw new Error(
+            "non-default length specified for non-extendable algorithm",
+          );
+        }
 
         if (bytes) {
           context.update(bytes);
@@ -294,6 +302,14 @@ const stdCrypto: StdCrypto = ((x) => x)({
 
       if ((FNV_ALGORITHMS as string[]).includes(name)) {
         const context = new FNV_IMPLEMENTATIONS[name as FNVAlgorithms]();
+        const supportedLength = FNV_LENGTHS[name as FNVAlgorithms];
+
+        if (length !== undefined && length !== supportedLength) {
+          throw new Error(
+            "non-default length specified for non-extendable algorithm",
+          );
+        }
+
         if (bytes) {
           context.update(bytes);
         } else if ((data as Iterable<BufferSource>)[Symbol.iterator]) {

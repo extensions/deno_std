@@ -6,7 +6,14 @@ import { Fnv64, Fnv64A } from "./fnv64.ts";
 
 export const FNV_IMPLEMENTATIONS = {
   "FNV32": Fnv32,
-  "FNV64": Fnv64,
   "FNV32A": Fnv32A,
+  "FNV64": Fnv64,
   "FNV64A": Fnv64A,
+};
+
+export const FNV_LENGTHS = {
+  "FNV32": 4,
+  "FNV32A": 4,
+  "FNV64": 8,
+  "FNV64A": 8,
 };
