@@ -34,10 +34,10 @@
  * - `BLAKE2B`
  * - `BLAKE2S`
  * - `BLAKE3`
- * - `FNV32` (length-extendable)
- * - `FNV32A` (length-extendable)
- * - `FNV64` (length-extendable)
- * - `FNV64A` (length-extendable)
+ * - `FNV32` (non-cryptographic)
+ * - `FNV32A` (non-cryptographic)
+ * - `FNV64` (non-cryptographic)
+ * - `FNV64A` (non-cryptographic)
  * - `KECCAK-224`
  * - `KECCAK-256`
  * - `KECCAK-384`
@@ -112,8 +112,6 @@ import {
   digestAlgorithms as wasmDigestAlgorithms,
   instantiateWasm,
 } from "./_wasm/mod.ts";
-import { FNV_IMPLEMENTATIONS } from "./_fnv/mod.ts";
-import { FNV_LENGTHS } from "https://deno.land/std@$STD_VERSION/crypto/_fnv/mod.ts";
 
 export { type WasmDigestAlgorithm, wasmDigestAlgorithms };
 
@@ -211,43 +209,6 @@ const stdCrypto: StdCrypto = ((x) => x)({
         bytes
       ) {
         return webCrypto.subtle.digest(algorithm, bytes);
-      } else if ((FNV_ALGORITHMS as string[]).includes(name)) {
-        const context = new FNV_IMPLEMENTATIONS[name as FNVAlgorithms]();
-        const supportedLength = FNV_LENGTHS[name as FNVAlgorithms];
-
-        if (length !== undefined && length !== supportedLength) {
-          throw new Error(
-            "non-default length specified for non-extendable algorithm",
-          );
-        }
-
-        if (bytes) {
-          context.update(bytes);
-        } else if ((data as Iterable<BufferSource>)[Symbol.iterator]) {
-          for (const chunk of data as Iterable<BufferSource>) {
-            const chunkBytes = bufferSourceBytes(chunk);
-            if (!chunkBytes) {
-              throw new TypeError("data contained chunk of the wrong type");
-            }
-            context.update(chunkBytes);
-          }
-        } else if (
-          (data as AsyncIterable<BufferSource>)[Symbol.asyncIterator]
-        ) {
-          for await (const chunk of data as AsyncIterable<BufferSource>) {
-            const chunkBytes = bufferSourceBytes(chunk);
-            if (!chunkBytes) {
-              throw new TypeError("data contained chunk of the wrong type");
-            }
-            context.update(chunkBytes);
-          }
-        } else {
-          throw new TypeError(
-            "data must be a BufferSource or [Async]Iterable<BufferSource>",
-          );
-        }
-
-        return context.digest();
       } else if (wasmDigestAlgorithms.includes(name as WasmDigestAlgorithm)) {
         if (bytes) {
           // Otherwise, we use our bundled Wasm implementation via digestSync
@@ -299,31 +260,6 @@ const stdCrypto: StdCrypto = ((x) => x)({
       assertValidDigestLength(length);
 
       const bytes = bufferSourceBytes(data);
-
-      if ((FNV_ALGORITHMS as string[]).includes(name)) {
-        const context = new FNV_IMPLEMENTATIONS[name as FNVAlgorithms]();
-        const supportedLength = FNV_LENGTHS[name as FNVAlgorithms];
-
-        if (length !== undefined && length !== supportedLength) {
-          throw new Error(
-            "non-default length specified for non-extendable algorithm",
-          );
-        }
-
-        if (bytes) {
-          context.update(bytes);
-        } else if ((data as Iterable<BufferSource>)[Symbol.iterator]) {
-          for (const chunk of data as Iterable<BufferSource>) {
-            const chunkBytes = bufferSourceBytes(chunk);
-            if (!chunkBytes) {
-              throw new TypeError("data contained chunk of the wrong type");
-            }
-            context.update(chunkBytes);
-          }
-        }
-
-        return context.digest();
-      }
 
       const wasmCrypto = instantiateWasm();
       if (bytes) {

@@ -42,6 +42,11 @@ export const digestAlgorithms = [
   "MD4",
   "MD5",
   "SHA-1",
+  // insecure (non-cryptographic)
+  "FNV32",
+  "FNV32A",
+  "FNV64",
+  "FNV64A",
 ] as const;
 
 /** An algorithm name supported by std/crypto/_wasm. */
