@@ -80,7 +80,7 @@ impl Context {
   /// The output digest length for the algorithm, in bytes.
   ///
   /// If the algorithm is variable-length, this returns its default length.
-  pub fn output_length(&self) -> usize {
+  fn output_length(&self) -> usize {
     match self {
       Blake2b(context) => context.output_size(),
       Blake2b128(context) => context.output_size(),
@@ -123,7 +123,7 @@ impl Context {
 
   /// Whether the algorithm has an extendable variable-length digest output
   /// (whether it is an "XOF").
-  pub const fn extendable(&self) -> bool {
+  const fn extendable(&self) -> bool {
     matches!(self, Blake3(_) | Shake128(_) | Shake256(_))
   }
 

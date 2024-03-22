@@ -4,7 +4,7 @@
 // deno-fmt-ignore-file
 /// <reference types="./deno_std_wasm_crypto.generated.d.mts" />
 
-// source-hash: eea0063b2a9200be2446675d94634549d97ddbbd
+// source-hash: 01cafcff16ac43cff6548ce9fddcf6ca5b121de8
 let wasm;
 
 const heap = new Array(128).fill(undefined);
@@ -255,8 +255,7 @@ export class DigestContext {
    * the algorithm. For algorithms with variable-length output, it can be used
    * to specify a non-negative integer number of bytes.
    *
-   * An error will be thrown if `algorithm` is not a supported hash algorithm or
-   * `length` is not a supported length for the algorithm.
+   * An error will be thrown if `length` is not a supported length for the algorithm.
    * @param {number | undefined} [length]
    * @returns {Uint8Array}
    */
