@@ -115,6 +115,15 @@ import {
 
 export { DIGEST_ALGORITHM_NAMES, type DigestAlgorithmName };
 
+/** Digest algorithms supported by WebCrypto. */
+const WEB_CRYPTO_DIGEST_ALGORITHM_NAMES = [
+  "SHA-384",
+  "SHA-256",
+  "SHA-512",
+  // insecure (length-extendable and collidable):
+  "SHA-1",
+] as const;
+
 /**
  * A copy of the global WebCrypto interface, with methods bound so they're
  * safe to re-export.
@@ -204,7 +213,9 @@ const stdCrypto: StdCrypto = ((x) => x)({
       // We delegate to WebCrypto whenever possible,
       if (
         // if the algorithm is supported by the WebCrypto standard,
-        (webCryptoDigestAlgorithms as readonly string[]).includes(name) &&
+        (WEB_CRYPTO_DIGEST_ALGORITHM_NAMES as readonly string[]).includes(
+          name,
+        ) &&
         // and the data is a single buffer,
         bytes
       ) {
@@ -283,15 +294,6 @@ const stdCrypto: StdCrypto = ((x) => x)({
     },
   },
 });
-
-/** Digest algorithms supported by WebCrypto. */
-export const webCryptoDigestAlgorithms = [
-  "SHA-384",
-  "SHA-256",
-  "SHA-512",
-  // insecure (length-extendable and collidable):
-  "SHA-1",
-] as const;
 
 /*
  * The largest digest length the current Wasm implementation can support. This
