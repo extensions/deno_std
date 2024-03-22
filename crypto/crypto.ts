@@ -356,7 +356,7 @@ export const FNV_ALGORITHMS: FNVAlgorithms[] = [
 ];
 
 /** Digest algorithms supported by WebCrypto. */
-const webCryptoDigestAlgorithms = [
+export const webCryptoDigestAlgorithms = [
   "SHA-384",
   "SHA-256",
   "SHA-512",
