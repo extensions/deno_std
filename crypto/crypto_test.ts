@@ -1,6 +1,6 @@
 // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
 import { assert, assertEquals, assertInstanceOf, fail } from "../assert/mod.ts";
-import { type DigestAlgorithmName, crypto as stdCrypto } from "./mod.ts";
+import { crypto as stdCrypto, type DigestAlgorithmName } from "./mod.ts";
 import { repeat } from "../bytes/repeat.ts";
 import { digestAlgorithms } from "./_wasm/mod.ts";
 import { encodeHex } from "../encoding/hex.ts";
@@ -1289,7 +1289,7 @@ const digestCases: [
   ],
 ];
 
-Deno.test("digest() checks fnv algorithm implementation", () => {
+Deno.test("digest() checks FNV algorithm implementation", () => {
   const inputString = "deno";
   const inputBytes = new TextEncoder().encode(inputString);
 
@@ -1332,6 +1332,7 @@ for (const algorithm of DIGEST_ALGORITHMS) {
         // to return successfully, or an error class/constructor function, if
         // the case is expected to throw.
         if (typeof expected === "string") {
+          console.log(bytePieces);
           const actual = encodeHex(
             await stdCrypto.subtle.digest({
               ...options,

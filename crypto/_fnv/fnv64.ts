@@ -7,29 +7,51 @@
 
 import { mul64, swap32 } from "./util.ts";
 
-const prime64Lo = 435;
-const prime64Hi = 256;
+const PRIME_64_HIGH = 256;
+const PRIME_64_LOW = 435;
+const OFFSET_64_HIGH = 3421674724;
+const OFFSET_64_LOW = 2216829733;
 
-export const fnv64 = (data: Uint8Array): ArrayBuffer => {
-  let hashLo = 2216829733;
-  let hashHi = 3421674724;
+export class Fnv64 {
+  #hashHigh = OFFSET_64_HIGH;
+  #hashLow = OFFSET_64_LOW;
 
-  data.forEach((c) => {
-    [hashHi, hashLo] = mul64([hashHi, hashLo], [prime64Hi, prime64Lo]);
-    hashLo ^= c;
-  });
+  update(bytes: Uint8Array) {
+    for (const byte of bytes) {
+      [this.#hashHigh, this.#hashLow] = mul64([this.#hashHigh, this.#hashLow], [
+        PRIME_64_HIGH,
+        PRIME_64_LOW,
+      ]);
+      this.#hashLow ^= byte;
+    }
+  }
 
-  return new Uint32Array([swap32(hashHi >>> 0), swap32(hashLo >>> 0)]).buffer;
-};
+  digest(): ArrayBuffer {
+    return new Uint32Array([
+      swap32(this.#hashHigh >>> 0),
+      swap32(this.#hashLow >>> 0),
+    ]).buffer;
+  }
+}
 
-export const fnv64a = (data: Uint8Array): ArrayBuffer => {
-  let hashLo = 2216829733;
-  let hashHi = 3421674724;
+export class Fnv64A {
+  #hashHigh = OFFSET_64_HIGH;
+  #hashLow = OFFSET_64_LOW;
 
-  data.forEach((c) => {
-    hashLo ^= c;
-    [hashHi, hashLo] = mul64([hashHi, hashLo], [prime64Hi, prime64Lo]);
-  });
+  update(bytes: Uint8Array) {
+    for (const byte of bytes) {
+      this.#hashLow ^= byte;
+      [this.#hashHigh, this.#hashLow] = mul64([this.#hashHigh, this.#hashLow], [
+        PRIME_64_HIGH,
+        PRIME_64_LOW,
+      ]);
+    }
+  }
 
-  return new Uint32Array([swap32(hashHi >>> 0), swap32(hashLo >>> 0)]).buffer;
-};
+  digest(): ArrayBuffer {
+    return new Uint32Array([
+      swap32(this.#hashHigh >>> 0),
+      swap32(this.#hashLow >>> 0),
+    ]).buffer;
+  }
+}

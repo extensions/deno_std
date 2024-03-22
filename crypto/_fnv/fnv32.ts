@@ -7,26 +7,35 @@
 
 import { mul32, swap32 } from "./util.ts";
 
-const prime32 = 16777619;
+const PRIME_32 = 16777619;
+const OFFSET_32 = 2166136261;
 
-export const fnv32 = (data: Uint8Array): ArrayBuffer => {
-  let hash = 2166136261;
+export class Fnv32 {
+  #hash = OFFSET_32;
 
-  data.forEach((c) => {
-    hash = mul32(hash, prime32);
-    hash ^= c;
-  });
+  update(bytes: Uint8Array) {
+    for (const byte of bytes) {
+      this.#hash = mul32(this.#hash, PRIME_32);
+      this.#hash ^= byte;
+    }
+  }
 
-  return Uint32Array.from([swap32(hash)]).buffer;
-};
+  digest(): ArrayBuffer {
+    return Uint32Array.from([swap32(this.#hash)]).buffer;
+  }
+}
 
-export const fnv32a = (data: Uint8Array): ArrayBuffer => {
-  let hash = 2166136261;
+export class Fnv32A {
+  #hash = OFFSET_32;
 
-  data.forEach((c) => {
-    hash ^= c;
-    hash = mul32(hash, prime32);
-  });
+  update(bytes: Uint8Array) {
+    for (const byte of bytes) {
+      this.#hash ^= byte;
+      this.#hash = mul32(this.#hash, PRIME_32);
+    }
+  }
 
-  return Uint32Array.from([swap32(hash)]).buffer;
-};
+  digest(): ArrayBuffer {
+    return Uint32Array.from([swap32(this.#hash)]).buffer;
+  }
+}
