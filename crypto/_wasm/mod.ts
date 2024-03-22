@@ -5,12 +5,12 @@ export {
 } from "./lib/deno_std_wasm_crypto.generated.mjs";
 
 /**
- * All cryptographic hash/digest algorithms supported by std/crypto/_wasm.
+ * All cryptographic hash/digest algorithms supported by std/crypto.
  *
- * For algorithms that are supported by WebCrypto, the name here must match the
- * one used by WebCrypto. Otherwise we should prefer the formatting used in the
- * official specification. All names are uppercase to facilitate case-insensitive
- * comparisons required by the WebCrypto spec.
+ * For algorithms that are supported by WebCrypto, the name here will match the
+ * one used by WebCrypto. Otherwise we prefer the formatting used in the
+ * algorithm's official specification. All names are uppercase to facilitate
+ * case-insensitive comparisons required by the WebCrypto spec.
  */
 export const DIGEST_ALGORITHM_NAMES = [
   "BLAKE2B",
@@ -49,5 +49,5 @@ export const DIGEST_ALGORITHM_NAMES = [
   "FNV64A",
 ] as const;
 
-/** An algorithm name supported by std/crypto/_wasm. */
+/** An algorithm name supported by std/crypto. */
 export type DigestAlgorithmName = typeof DIGEST_ALGORITHM_NAMES[number];
