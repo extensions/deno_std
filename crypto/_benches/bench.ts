@@ -1,9 +1,6 @@
 #!/usr/bin/env -S deno bench
 // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
-import {
-  crypto as stdCrypto,
-  DIGEST_ALGORITHM_NAMES,
-} from "https://deno.land/std@$STD_VERSION/crypto/mod.ts";
+import { crypto as stdCrypto, DIGEST_ALGORITHM_NAMES } from "../mod.ts";
 
 import { crypto as oldCrypto } from "https://deno.land/std@0.220.1/crypto/mod.ts";
 
