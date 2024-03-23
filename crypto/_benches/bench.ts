@@ -45,7 +45,7 @@ for (
 
     for (
       const implementation of [
-        webCryptoDigestAlgorithms.includes(algorithm as any)
+        (webCryptoDigestAlgorithms as readonly string[]).includes(algorithm)
           ? "runtime WebCrypto"
           : false,
         "@std/crypto local",
