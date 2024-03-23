@@ -4,7 +4,7 @@
 // deno-fmt-ignore-file
 /// <reference types="./deno_std_wasm_crypto.generated.d.mts" />
 
-// source-hash: 01cafcff16ac43cff6548ce9fddcf6ca5b121de8
+// source-hash: 9a6ff3d0b1142045657a9db3bbe4616b30ac9995
 let wasm;
 
 const heap = new Array(128).fill(undefined);
