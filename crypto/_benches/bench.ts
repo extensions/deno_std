@@ -2,6 +2,8 @@
 // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
 import { crypto as stdCrypto, DIGEST_ALGORITHM_NAMES } from "../mod.ts";
 
+import nodeCrypto from "node:crypto";
+
 import { crypto as oldCrypto } from "https://deno.land/std@0.220.1/crypto/mod.ts";
 
 const webCrypto = globalThis.crypto;
@@ -9,12 +11,25 @@ const webCrypto = globalThis.crypto;
 const BENCHMARKED_DIGEST_ALGORITHM_NAMES = [
   "SHA-1",
   "SHA-256",
-  "SHA-384",
   "SHA-512",
+  "BLAKE3",
+  "MD5",
+  "RIPEMD-160",
 ] satisfies (typeof DIGEST_ALGORITHM_NAMES[number])[];
 
 const WEB_CRYPTO_DIGEST_ALGORITHM_NAMES = [
   "SHA-1",
+  "SHA-256",
+  "SHA-384",
+  "SHA-512",
+] satisfies (typeof DIGEST_ALGORITHM_NAMES[number])[];
+
+const NODE_CRYPTO_DIGEST_ALGORITHM_NAMES = [
+  "MD4",
+  "MD5",
+  "RIPEMD-160",
+  "SHA-1",
+  "SHA-224",
   "SHA-256",
   "SHA-384",
   "SHA-512",
@@ -37,7 +52,7 @@ for (
   for (const name of BENCHMARKED_DIGEST_ALGORITHM_NAMES) {
     Deno.bench({
       group: `${humanLength} in ${name}`,
-      name: `Rust/Wasm (current) with ${humanLength} in ${name}`,
+      name: `std/crypto Wasm with ${humanLength} in ${name}`,
       baseline: true,
       async fn() {
         await stdCrypto.subtle.digest(name, [buffer]);
@@ -46,7 +61,7 @@ for (
 
     Deno.bench({
       group: `${humanLength} in ${name}`,
-      name: `Rust/Wasm (v0.220.1) with ${humanLength} in ${name}`,
+      name: `std/crypto (v0.220.1) Wasm with ${humanLength} in ${name}`,
       async fn() {
         await oldCrypto.subtle.digest(name, [buffer]);
       },
@@ -57,9 +72,23 @@ for (
     ) {
       Deno.bench({
         group: `${humanLength} in ${name}`,
-        name: `Runtime WebCrypto with ${humanLength} in ${name}`,
+        name: `runtime WebCrypto with ${humanLength} in ${name}`,
         async fn() {
           await webCrypto.subtle.digest(name, buffer);
+        },
+      });
+    }
+
+    if (
+      (NODE_CRYPTO_DIGEST_ALGORITHM_NAMES as readonly string[]).includes(name)
+    ) {
+      const nodeName = name.replace("-", "").toLowerCase();
+
+      Deno.bench({
+        group: `${humanLength} in ${name}`,
+        name: `runtime node:crypto with ${humanLength} in ${name}`,
+        async fn() {
+          nodeCrypto.createHash(nodeName).update(buffer).digest();
         },
       });
     }
