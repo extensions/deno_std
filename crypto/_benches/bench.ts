@@ -7,11 +7,10 @@ import { crypto as oldCrypto } from "https://deno.land/std@0.220.1/crypto/mod.ts
 const webCrypto = globalThis.crypto;
 
 const BENCHMARKED_DIGEST_ALGORITHM_NAMES = [
+  "SHA-1",
   "SHA-256",
+  "SHA-384",
   "SHA-512",
-  "BLAKE3",
-  "FNV32A",
-  "FNV64A",
 ] satisfies (typeof DIGEST_ALGORITHM_NAMES[number])[];
 
 const WEB_CRYPTO_DIGEST_ALGORITHM_NAMES = [
@@ -35,17 +34,24 @@ for (
     buffer[i] = (i + (i % 13) + (i % 31)) % 256;
   }
 
-  for (const name of ["FNV32A", "FNV64A"] as const) {
+  for (const name of BENCHMARKED_DIGEST_ALGORITHM_NAMES) {
     Deno.bench({
       group: `${humanLength} in ${name}`,
-      name: `TypeScript (from v0.220.1) with ${humanLength} in ${name}`,
+      name: `Rust/Wasm (current) with ${humanLength} in ${name}`,
+      baseline: true,
       async fn() {
-        await oldCrypto.subtle.digest(name, buffer);
+        await stdCrypto.subtle.digest(name, [buffer]);
       },
     });
-  }
 
-  for (const name of BENCHMARKED_DIGEST_ALGORITHM_NAMES) {
+    Deno.bench({
+      group: `${humanLength} in ${name}`,
+      name: `Rust/Wasm (v0.220.1) with ${humanLength} in ${name}`,
+      async fn() {
+        await oldCrypto.subtle.digest(name, [buffer]);
+      },
+    });
+
     if (
       (WEB_CRYPTO_DIGEST_ALGORITHM_NAMES as readonly string[]).includes(name)
     ) {
@@ -57,14 +63,5 @@ for (
         },
       });
     }
-
-    Deno.bench({
-      group: `${humanLength} in ${name}`,
-      name: `Rust/Wasm with ${humanLength} in ${name}`,
-      baseline: true,
-      async fn() {
-        await stdCrypto.subtle.digest(name, [buffer]);
-      },
-    });
   }
 }
