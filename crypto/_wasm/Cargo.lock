@@ -15,6 +15,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96d30a06541fbafbc7f82ed10c06164cfbd2c401138f6addd8404629c4b16711"
 
 [[package]]
+name = "bao"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3663af8a469bf3a2d818b8c1a7b62e4dc55c4547b4c14f5dab35fc9e707bef83"
+dependencies = [
+ "arrayref",
+ "arrayvec",
+ "blake3",
+]
+
+[[package]]
 name = "blake2"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -36,6 +47,12 @@ dependencies = [
  "constant_time_eq",
  "digest",
 ]
+
+[[package]]
+name = "blake3_guts"
+version = "0.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dda08308cd5393f749c853f8eb805d73e30b8bff2055856dfc24d7a9370a3ae7"
 
 [[package]]
 name = "block-buffer"
@@ -99,8 +116,10 @@ dependencies = [
 name = "deno_std_wasm_crypto"
 version = "0.0.0"
 dependencies = [
+ "bao",
  "blake2",
  "blake3",
+ "blake3_guts",
  "derive_more",
  "digest",
  "generic-array 1.0.0",
