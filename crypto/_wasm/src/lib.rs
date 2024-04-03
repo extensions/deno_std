@@ -3,6 +3,7 @@ use derive_more::{From, Into};
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 
+mod blake3;
 mod digest;
 mod fnv;
 
