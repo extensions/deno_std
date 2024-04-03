@@ -4,6 +4,8 @@
 // deno-fmt-ignore-file
 /// <reference types="./deno_std_wasm_crypto.generated.d.mts" />
 
+import { chunk } from "https://deno.land/std@$STD_VERSION/collections/chunk.ts";
+
 // source-hash: b450def1551fe03a7b4a89304f8336afd121f566
 let wasm;
 
@@ -473,9 +475,7 @@ export function isInstantiated() {
   return instanceWithExports != null;
 }
 
-function instantiateInstance() {
-  const wasmBytes = base64decode(
-    "\
+const wasmText = "\
 AGFzbQEAAAABsQEZYAAAYAABf2ABfwBgAX8Bf2ACf38AYAJ/fwF/YAN/f38AYAN/f38Bf2AEf39/fw\
 BgBH9/f38Bf2AFf39/f38AYAV/f39/fwF/YAZ/f39/f38AYAZ/f39/f38Bf2AHf39/f35/fwBgBX9/\
 f35/AGAHf39/fn9/fwF/YAN/f34AYAV/f35/fwBgBX9/fX9/AGAFf398f38AYAJ/fgBgBH9+f38AYA\
@@ -3300,8 +3300,47 @@ AT1jb3JlOjpwdHI6OmRyb3BfaW5fcGxhY2U8Y29yZTo6Zm10OjpFcnJvcj46Omg4OTYyMzIxNDQ3Mz\
 U4OTQ4AG8JcHJvZHVjZXJzAghsYW5ndWFnZQEEUnVzdAAMcHJvY2Vzc2VkLWJ5AwVydXN0Yx0xLjc3\
 LjAgKGFlZGQxNzNhMiAyMDI0LTAzLTE3KQZ3YWxydXMGMC4yMC4zDHdhc20tYmluZGdlbgYwLjIuOT\
 IALA90YXJnZXRfZmVhdHVyZXMCKw9tdXRhYmxlLWdsb2JhbHMrCHNpZ24tZXh0\
-    ",
-  );
+";
+
+
+
+{
+  const blocks = chunk(wasmText, 4);
+  const pieces = new Array();
+  let cleanBlockCount = 0;
+  let cleanDataBuffer = "";
+  const flushClean = () => {
+    if (cleanBlockCount === 0) {
+      return;
+    } else if (cleanBlockCount === 1) {
+      pieces.push(`~${cleanDataBuffer}`);
+    } else if (cleanBlockCount === 2) {
+      pieces.push(`||${cleanDataBuffer}`);
+    } else if (cleanBlockCount === 3) {
+      pieces.push(`|3|${cleanDataBuffer}`);
+    } else {
+      pieces.push(`|${cleanBlockCount.toString(36)}|${cleanDataBuffer}`.padEnd(cleanBlockCount * 4 - 1) + "|");
+    }
+    cleanBlockCount = 0;
+    cleanDataBuffer = "";
+  };
+  for (const block of blocks) {
+    const b = atob(block);
+    const isClean = Array.from(b).every(c => /[a-zA-Z0-9 \.\,\-\_\:\;\!\@\#\$\%\^\&\*\(\)\[\]\{\}\/\<\>\|\~]/.test(c));
+    if (isClean && block.length === 4) {
+      cleanBlockCount += 1;
+      cleanDataBuffer += b;
+    } else {
+      flushClean();
+      pieces.push(block)
+    }
+  }
+  flushClean();
+  console.log(`"\\\n${chunk(pieces.join(""), 76).join("\\\n")}\\\n";`)
+}
+
+function instantiateInstance() {
+  const wasmBytes = base64decode(wasmText);
   const wasmModule = new WebAssembly.Module(wasmBytes);
   return new WebAssembly.Instance(wasmModule, imports);
 }
@@ -3315,3 +3354,5 @@ function base64decode(b64) {
   }
   return bytes;
 }
+
+instantiate()
