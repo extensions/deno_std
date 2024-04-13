@@ -37,6 +37,20 @@ export const DIGEST_ALGORITHM_NAMES = [
   "SHA-224",
   "SHA-256",
   "SHA-512",
+  /**
+  Unfortunately, this modified SHA-1 algorithm doesn't have a standardized name,
+  despite being widely-deployed. We refer to it as "SHA-1-DC" because the "DC"
+  suffix is used by the reference implementation, and it seems to be the more
+  widely-used name in code. However, it's also known as "Hardened SHA-1",
+  "SHA-1-CD", "Checked SHA-1" or "Safe SHA-1". For total clarity: this refers to
+  the modified version of SHA-1 originally created by Marc Stevens which
+  produces the same output for most inputs, but checks for the presence of any
+  of 32 "disturbance vectors" in the hash state (which are a reliable indicator
+  for all known collision attacks on SHA-1) and if they're detected,
+  re-processes the latest input block twice to get back to a collision-safe
+  state and then produces a different digest than the standard SHA-1 algorithm.
+   */
+  "SHA-1-DC",
   // insecure (length-extendable and collidable):
   "MD4",
   "MD5",
