@@ -11,9 +11,9 @@ const webCrypto = globalThis.crypto;
 const BENCHMARKED_DIGEST_ALGORITHM_NAMES = [
   "SHA-256",
   "SHA-512",
+  "SHA-1",
+  "SHA-1-DC",
   "BLAKE3",
-  "FNV32A",
-  "FNV64A",
 ] satisfies (typeof DIGEST_ALGORITHM_NAMES[number])[];
 
 const WEB_CRYPTO_DIGEST_ALGORITHM_NAMES = [
@@ -57,41 +57,41 @@ for (
       },
     });
 
-    if (name.startsWith("FNV")) {
-      Deno.bench({
-        group: `digesting ${humanLength}`,
-        name:
-          `${name} from std/crypto (v0.220.1) TypeScript digesting ${humanLength}`,
-        async fn() {
-          await oldCrypto.subtle.digest(name, buffer);
-        },
-      });
-    }
+    // if (name.startsWith("FNV")) {
+    //   Deno.bench({
+    //     group: `digesting ${humanLength}`,
+    //     name:
+    //       `${name} from std/crypto (v0.220.1) TypeScript digesting ${humanLength}`,
+    //     async fn() {
+    //       await oldCrypto.subtle.digest(name, buffer);
+    //     },
+    //   });
+    // }
 
-    if (
-      (WEB_CRYPTO_DIGEST_ALGORITHM_NAMES as readonly string[]).includes(name)
-    ) {
-      Deno.bench({
-        group: `digesting ${humanLength}`,
-        name: `${name} from runtime WebCrypto digesting ${humanLength}`,
-        async fn() {
-          await webCrypto.subtle.digest(name, buffer);
-        },
-      });
-    }
+    // if (
+    //   (WEB_CRYPTO_DIGEST_ALGORITHM_NAMES as readonly string[]).includes(name)
+    // ) {
+    //   Deno.bench({
+    //     group: `digesting ${humanLength}`,
+    //     name: `${name} from runtime WebCrypto digesting ${humanLength}`,
+    //     async fn() {
+    //       await webCrypto.subtle.digest(name, buffer);
+    //     },
+    //   });
+    // }
 
-    if (
-      (NODE_CRYPTO_DIGEST_ALGORITHM_NAMES as readonly string[]).includes(name)
-    ) {
-      const nodeName = name.replace("-", "").toLowerCase();
+    // if (
+    //   (NODE_CRYPTO_DIGEST_ALGORITHM_NAMES as readonly string[]).includes(name)
+    // ) {
+    //   const nodeName = name.replace("-", "").toLowerCase();
 
-      Deno.bench({
-        group: `digesting ${humanLength}`,
-        name: `${name} from runtime node:crypto digesting ${humanLength}`,
-        fn() {
-          nodeCrypto.createHash(nodeName).update(buffer).digest();
-        },
-      });
-    }
+    //   Deno.bench({
+    //     group: `digesting ${humanLength}`,
+    //     name: `${name} from runtime node:crypto digesting ${humanLength}`,
+    //     fn() {
+    //       nodeCrypto.createHash(nodeName).update(buffer).digest();
+    //     },
+    //   });
+    // }
   }
 }

@@ -298,6 +298,7 @@ const allErrors = {
   MD5: Error,
   "RIPEMD-160": Error,
   "SHA-1": Error,
+  "SHA-1-DC": Error,
   "SHA-224": Error,
   "SHA-256": Error,
   "SHA3-224": Error,
@@ -351,6 +352,7 @@ const digestCases: [
     MD5: "d41d8cd98f00b204e9800998ecf8427e",
     "RIPEMD-160": "9c1185a5c5e9fc54612808977ee8f548b2258d31",
     "SHA-1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "SHA-1-DC": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
     "SHA-224": "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f",
     "SHA-256":
       "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -407,6 +409,7 @@ const digestCases: [
       MD5: "93b885adfe0da089cdf634904fd59f71",
       "RIPEMD-160": "c81b94933420221a7ac004a90242d8b1d3e5070d",
       "SHA-1": "5ba93c9db0cff93f52b521d7420e43f6eda2784f",
+      "SHA-1-DC": "5ba93c9db0cff93f52b521d7420e43f6eda2784f",
       "SHA-224": "fff9292b4201617bdc4d3053fce02734166a683d7d858a7f5f59b073",
       "SHA-256":
         "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -456,6 +459,7 @@ const digestCases: [
     MD5: "0cc175b9c0f1b6a831c399e269772661",
     "RIPEMD-160": "0bdc9d2d256b3ee9daae347be6f4dc835a467ffe",
     "SHA-1": "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8",
+    "SHA-1-DC": "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8",
     "SHA-224": "abd37534c7d9a2efb9465de931cd7055ffdb8879563ae98078d6d6d5",
     "SHA-256":
       "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
@@ -510,6 +514,7 @@ const digestCases: [
       MD5: "4144e195f46de78a3623da7364d04f11",
       "RIPEMD-160": "3213d398bb951aa09625539093524fa528848bd0",
       "SHA-1": "0a04b971b03da607ce6c455184037b660ca89f78",
+      "SHA-1-DC": "0a04b971b03da607ce6c455184037b660ca89f78",
       "SHA-224": "3118199937a95dd0dd06a74ac0bf1517e958f08ae87ef9d7e89f139a",
       "SHA-256":
         "ffe9aaeaa2a2d5048174df0b80599ef0197ec024c4b051bc9860cff58ef7f9f3",
@@ -559,6 +564,7 @@ const digestCases: [
     MD5: "187ef4436122d1cc2f40dc2b92f0eba0",
     "RIPEMD-160": "8576c67fcdf6c5d2f648efa58a32856b957f401a",
     "SHA-1": "da23614e02469a0d7c7bd1bdab5c9c474b1904dc",
+    "SHA-1-DC": "da23614e02469a0d7c7bd1bdab5c9c474b1904dc",
     "SHA-224": "db3cda86d4429a1d39c148989566b38f7bda0156296bd364ba2f878b",
     "SHA-256":
       "fb8e20fc2e4c3f248c60c39bd652f3c1347298bb977b8b4d5903b85055620603",
@@ -607,6 +613,7 @@ const digestCases: [
     MD5: "900150983cd24fb0d6963f7d28e17f72",
     "RIPEMD-160": "8eb208f7e05d987a9b044a8e98c6b087f15a0bfc",
     "SHA-1": "a9993e364706816aba3e25717850c26c9cd0d89d",
+    "SHA-1-DC": "a9993e364706816aba3e25717850c26c9cd0d89d",
     "SHA-224": "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7",
     "SHA-256":
       "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
@@ -655,6 +662,7 @@ const digestCases: [
     MD5: "c8772b401bc911da102a5291cc4ec83b",
     "RIPEMD-160": "dc3c354a2004fc9bf46c64729e9b556eb414b812",
     "SHA-1": "bb3d8e712d9e7ad4af08d4a38f3f52d9683d58eb",
+    "SHA-1-DC": "bb3d8e712d9e7ad4af08d4a38f3f52d9683d58eb",
     "SHA-224": "c34ee73c656a6a6437b70610e261be4412c650acabdb20e26f11f620",
     "SHA-256":
       "e872e7bd2ae6abcf13a4c834029a342c882c1162ebf77b6720968b2000312ffb",
@@ -703,6 +711,7 @@ const digestCases: [
     MD5: "3858f62230ac3c915f300c664312c63f",
     "RIPEMD-160": "a06e327ea7388c18e4740e350ed4e60f2e04fc41",
     "SHA-1": "8843d7f92416211de9ebb963ff4ce28125932878",
+    "SHA-1-DC": "8843d7f92416211de9ebb963ff4ce28125932878",
     "SHA-224": "de76c3e567fca9d246f5f8d3b2e704a38c3c5e258988ab525f941db8",
     "SHA-256":
       "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2",
@@ -757,6 +766,7 @@ const digestCases: [
       MD5: "b4258860eea29e875e2ee4019763b2bb",
       "RIPEMD-160": "33553915bf71231666f258827f083077b772f8ed",
       "SHA-1": "09f154eb32d00226cec9f2775c5bbaa5a611533b",
+      "SHA-1-DC": "09f154eb32d00226cec9f2775c5bbaa5a611533b",
       "SHA-224": "dbc53a1087f959e5ce1b1df286cd67bdb412a30f477bdacf9b734a80",
       "SHA-256":
         "16917ee356726e4f1fa989280750b2f956a8d4e4e0f2ad7e20bd7ed3bb07c063",
@@ -791,6 +801,7 @@ const digestCases: [
     BLAKE3: "d74981efa70a0c880b8d8c1985d075dbcbf679b9",
     "RIPEMD-160": "98c615784ccb5fe5936fbc0cbe9dfdb408d92f0f",
     "SHA-1": "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+    "SHA-1-DC": "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
     SHAKE128: "3a9159f071e4dd1c8c4f968607c30942e120d815",
     SHAKE256: "369771bb2cb9d2b04c1d54cca487e372d9f187f7",
   }],
@@ -885,6 +896,7 @@ const digestCases: [
     MD5: "65ee3c415a2316553ebf2fdb2ccafd0b",
     "RIPEMD-160": "a7188285d5c8560c44deadbdbb095e8fe6ac8dec",
     "SHA-1": "74de0faec24034e7415e7a6ee379e509b29985b2",
+    "SHA-1-DC": "74de0faec24034e7415e7a6ee379e509b29985b2",
     "SHA-224": "cfb9e6dd8dc52cb0e843067467e58a03224fbe84004b955078c98a20",
     "SHA-256":
       "ce0ae911a08c37d8e25605bc209c13e870ab3c4a40a7610ea3af989d9b0a00dd",
@@ -939,6 +951,7 @@ const digestCases: [
       MD5: "81f7e24f254ca2af692188d17b5103d8",
       "RIPEMD-160": "e4d0ecd208850e00726c0c481b888f8de06fbfce",
       "SHA-1": "b0161602fcdd324d2d0222b5c8d2873ff1f6452e",
+      "SHA-1-DC": "b0161602fcdd324d2d0222b5c8d2873ff1f6452e",
       "SHA-224": "926ed59d539deff483058be7c73bf38a5af127a6c9e7d4da36cb3c6e",
       "SHA-256":
         "38fa97da941ae64bc1ec0d28fa14023e8041fd31857053d387d97e0ea1498203",
@@ -1002,6 +1015,7 @@ const digestCases: [
       MD5: "67162fd7a3a58a71b8dd3ee48d7a81de",
       "RIPEMD-160": "d4bdea1747dfc0cda2171c7b5a55b732feabb1cf",
       "SHA-1": "77fd495a283c66d4f9c28351c510fbff1458adf5",
+      "SHA-1-DC": "77fd495a283c66d4f9c28351c510fbff1458adf5",
       "SHA-224": "955a032fdcfb471142b979c30b93ed87c5ece98e7007510637f3f17a",
       "SHA-256":
         "e077f0aedd7a63888226967b9709f20485f9425fc682f08b2ba4e14a1e6035af",
