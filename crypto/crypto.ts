@@ -50,6 +50,7 @@
  * - `SHA-224` (length-extendable)
  * - `SHA-256` (length-extendable)
  * - `SHA-512` (length-extendable)
+ * - `SHA-1-DC` (length-extendable)
  * - `MD4` (length-extendable and collidable)
  * - `MD5` (length-extendable and collidable)
  * - `SHA-1` (length-extendable and collidable)
