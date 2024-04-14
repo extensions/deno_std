@@ -450,7 +450,7 @@ const imports = {
   },
 };
 
-import { decode92 } from "jsr:@jeb/encoding@0.0.5";
+import { decode92 } from "jsr:@jeb/encoding@0.0.7";
 
 export function instantiate() {
   return instantiateWithInstance().exports;
